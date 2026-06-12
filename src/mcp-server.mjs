@@ -13,7 +13,12 @@
 import { CONTRACT_VERSION, PRIMARY_DOMAIN } from "./contracts.mjs";
 import { KV_HEALTH_RPC_POOL } from "./health-prober.mjs";
 import { overlayRpcPoolEligibility } from "./health-serving.mjs";
-import { aiEnabled, semanticSearch, askQuestion } from "./ai-search.mjs";
+import {
+  aiEnabled,
+  askQuestion,
+  semanticSearch,
+  withinRateLimit,
+} from "./ai-search.mjs";
 
 // Protocol versions we understand. We echo the client's requested version when
 // it is one of these, otherwise we answer with our latest.
@@ -96,6 +101,18 @@ function requireAi(ctx) {
         "find_subnets_by_capability for keyword discovery instead.",
     );
   }
+}
+
+function mcpAiClientKey(ctx, scope) {
+  return `${scope}:${ctx.clientIp || "anon"}`;
+}
+
+async function requireAiRateLimit(ctx, scope) {
+  if (await withinRateLimit(ctx.env, mcpAiClientKey(ctx, scope))) return;
+  throw toolError(
+    "rate_limited",
+    "Too many AI requests. Please retry shortly.",
+  );
 }
 
 // Run an ai-search call, mapping its input-validation errors to tool errors so
@@ -592,6 +609,7 @@ export const MCP_TOOLS = [
     async handler(args, ctx) {
       requireAi(ctx);
       const query = requireString(args, "query");
+      await requireAiRateLimit(ctx, "semantic");
       return runAi(() =>
         semanticSearch(ctx.env, query, { limit: args?.limit }),
       );
@@ -620,6 +638,7 @@ export const MCP_TOOLS = [
     async handler(args, ctx) {
       requireAi(ctx);
       const question = requireString(args, "question");
+      await requireAiRateLimit(ctx, "ask");
       return runAi(() =>
         askQuestion(ctx.env, question, {}, { readArtifact: ctx.readArtifact }),
       );
@@ -907,6 +926,7 @@ function buildContext(request, env, deps) {
   return {
     env,
     domain,
+    clientIp: mcpClientKey(request),
     readArtifact: deps.readArtifact,
     readHealthKv: deps.readHealthKv,
   };
