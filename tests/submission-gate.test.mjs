@@ -961,6 +961,53 @@ describe("Metagraphed submission gate policy", () => {
     assert.equal(report.next_action, "open-import-pr");
   });
 
+  test("interface candidate reports credential text as a string error, not [object Object] (#1548)", () => {
+    const body = [
+      "### Netuid",
+      "7",
+      "### Subnet name",
+      "Allways",
+      "### Interface kind",
+      "docs",
+      "### Public URL",
+      "https://docs.all-ways.io/community-submission-example",
+      "### Source URL",
+      "https://docs.all-ways.io/how-it-works.html",
+      "### Provider or team",
+      "allways",
+      "### Does this interface require authentication?",
+      "no",
+      "### Evidence",
+      "Reproduced using my wallet mnemonic for the failing call.",
+    ].join("\n\n");
+    const report = buildIssueIntakeReport({
+      issue: {
+        number: 44,
+        title: "interface: credential leak",
+        user: { login: "jsonbored" },
+        labels: [{ name: SUBMISSION_LABELS.interfaceSubmission }],
+        body,
+      },
+      native,
+      providers,
+      generatedAt: "1970-01-01T00:00:00.000Z",
+    });
+
+    assert.equal(report.state, "schema-invalid");
+    assert.equal(
+      report.errors.includes(
+        "submission appears to include wallet, PAT, token, or private credential material",
+      ),
+      true,
+    );
+    // Every error must be a plain string so the contributor preflight comment
+    // never renders [object Object].
+    assert.equal(
+      report.errors.every((error) => typeof error === "string"),
+      true,
+    );
+  });
+
   test("routes provider profile issue submissions to manual review", () => {
     const body = [
       "### Provider slug",

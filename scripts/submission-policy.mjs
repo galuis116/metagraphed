@@ -296,7 +296,7 @@ export function buildIssueIntakeReport({
       fields["source url"],
     ].join("\n"),
   );
-  errors.push(...unsafeText);
+  errors.push(...unsafeText.map((error) => error.message));
 
   const subnet = native.subnets.find(
     (candidate) => candidate.netuid === netuid,
