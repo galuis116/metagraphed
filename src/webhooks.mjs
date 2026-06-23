@@ -286,17 +286,23 @@ export function buildChangeEvent({ changelog, pointer } = {}) {
 }
 
 export function eventMatchesFilters(event, filters) {
+  // No filters object (or neither facet present) means "no restriction" — match
+  // every event. A PRESENT facet is an allowlist, including an explicit empty
+  // one: `{kinds: []}` allows zero kinds, so it must match NOTHING, not fall
+  // through to match-all. normalizeFilters preserves an empty array, so a
+  // subscriber can create such a filter and would otherwise be flooded with
+  // every event instead of receiving none.
   if (
     !filters ||
     (filters.netuids === undefined && filters.kinds === undefined)
   ) {
     return true;
   }
-  if (Array.isArray(filters.kinds) && filters.kinds.length > 0) {
+  if (Array.isArray(filters.kinds)) {
     const eventKinds = new Set(event?.change_kinds || []);
     if (!filters.kinds.some((kind) => eventKinds.has(kind))) return false;
   }
-  if (Array.isArray(filters.netuids) && filters.netuids.length > 0) {
+  if (Array.isArray(filters.netuids)) {
     const affected = new Set(event?.affected_netuids || []);
     if (!filters.netuids.some((netuid) => affected.has(netuid))) return false;
   }
