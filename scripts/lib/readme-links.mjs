@@ -217,7 +217,34 @@ function normalizeHost(hostname) {
     .replace(/^www\./, "");
 }
 
+// Multi-label public suffixes under which each subdomain is a DISTINCT site, so
+// the registrable unit is `<label>.<suffix>` (3 labels), not the bare 2-label
+// suffix. Without this, `parts.slice(-2)` collapses e.g. `a.pages.dev` and
+// `b.pages.dev` — or `foo.co.uk` and `bar.co.uk` — to one dedupe key, dropping a
+// distinct README link. Kept local (compacted strings) so this module stays
+// dependency-free per the note above; mirrors scripts/lib.mjs's
+// MULTI_TENANT_HOST_SUFFIXES + CLUSTER_CCTLD_SUFFIXES.
+const MULTI_LABEL_PUBLIC_SUFFIXES = new Set([
+  // multi-tenant platform hosts (each subdomain is its own tenant)
+  "github.io", "gitlab.io", "pages.dev", "workers.dev", "vercel.app",
+  "netlify.app", "netlify.com", "surge.sh", "onrender.com", "azurewebsites.net",
+  "r2.dev", "notion.site", "pythonanywhere.com", "appspot.com", "web.app",
+  "firebaseapp.com", "herokuapp.com", "fly.dev", "glitch.me", "repl.co",
+  "webflow.io",
+  // second-level ccTLDs
+  "ac.uk", "co.uk", "gov.uk", "ltd.uk", "me.uk", "net.uk", "nhs.uk", "org.uk",
+  "plc.uk", "sch.uk", "asn.au", "com.au", "edu.au", "gov.au", "net.au",
+  "org.au", "co.nz", "geek.nz", "gen.nz", "govt.nz", "iwi.nz", "maori.nz",
+  "net.nz", "org.nz", "school.nz", "ac.jp", "co.jp", "ed.jp", "go.jp", "gr.jp",
+  "ne.jp", "or.jp", "com.br", "com.cn", "com.hk", "com.mx", "com.sg", "com.tr",
+  "com.tw", "co.in", "co.kr", "co.za",
+]);
+
 function registrableDomain(hostname) {
   const parts = normalizeHost(hostname).split(".").filter(Boolean);
-  return parts.slice(-2).join(".");
+  if (parts.length <= 2) return parts.join(".");
+  const lastTwo = parts.slice(-2).join(".");
+  return (
+    MULTI_LABEL_PUBLIC_SUFFIXES.has(lastTwo) ? parts.slice(-3) : parts.slice(-2)
+  ).join(".");
 }

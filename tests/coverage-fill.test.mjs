@@ -549,4 +549,50 @@ describe("lib README link selection limits", () => {
     assert.equal(capped.length, 1);
     assert.equal(capped[0].url, "https://docs.exampleproject.ai/a");
   });
+
+  test("keeps distinct tenants under a multi-label public suffix (no over-dedupe)", () => {
+    // Two distinct subnet-api tenants on the same multi-tenant host. The kind cap
+    // is 2, so both should survive — but a bare slice(-2) registrable domain
+    // collapses them to `pages.dev` and drops the second.
+    const tenants = selectReviewableReadmeLinks(
+      [
+        {
+          classification: { kind: "subnet-api", label: "api" },
+          label: "Tenant A",
+          url: "https://exampleproject-a.pages.dev/",
+        },
+        {
+          classification: { kind: "subnet-api", label: "api" },
+          label: "Tenant B",
+          url: "https://exampleproject-b.pages.dev/",
+        },
+      ],
+      { repo: { owner: "ExampleProject", repo: "subnet" } },
+    );
+    assert.deepEqual(
+      tenants.map((link) => link.url),
+      [
+        "https://exampleproject-a.pages.dev/",
+        "https://exampleproject-b.pages.dev/",
+      ],
+    );
+
+    // Same registrable domain (plain TLD): subdomains still collapse to one.
+    const sameSite = selectReviewableReadmeLinks(
+      [
+        {
+          classification: { kind: "subnet-api", label: "api" },
+          label: "Docs host",
+          url: "https://docs.exampleproject.ai/",
+        },
+        {
+          classification: { kind: "subnet-api", label: "api" },
+          label: "API host",
+          url: "https://api.exampleproject.ai/",
+        },
+      ],
+      { repo: { owner: "ExampleProject", repo: "subnet" } },
+    );
+    assert.equal(sameSite.length, 1);
+  });
 });
