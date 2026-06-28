@@ -370,6 +370,8 @@ test("account builders null invalid block heights and indices", () => {
   assert.equal(transfers.transfers[1].event_index, null);
   assert.equal(transfers.transfers[2].block_number, 10);
   assert.equal(transfers.transfers[2].event_index, 2);
+  assert.equal(transfers.transfers[2].amount_tao, 3);
+  assert.equal(transfers.transfers[2].direction, "sent");
 });
 
 test("formatRegistration defaults every sparse field to null/false (null-safe)", () => {
