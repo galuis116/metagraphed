@@ -373,13 +373,21 @@ test("account builders null invalid block heights and indices", () => {
   assert.equal(transfers.transfers[2].amount_tao, 3);
   assert.equal(transfers.transfers[2].direction, "sent");
 
-  // Null input preserves null (the value == null branch in toBlockNumber).
+  // Null block_number and event_index are preserved as null in the output.
   const nullTransfers = buildAccountTransfers(
     [{ block_number: null, event_index: null, hotkey: "5A", coldkey: "5B" }],
     "5A",
   );
   assert.equal(nullTransfers.transfers[0].block_number, null);
   assert.equal(nullTransfers.transfers[0].event_index, null);
+
+  // Fractional values are truncated toward zero, not rounded.
+  const fracTransfers = buildAccountTransfers(
+    [{ block_number: 3.7, event_index: 1.9, hotkey: "5A", coldkey: "5B" }],
+    "5A",
+  );
+  assert.equal(fracTransfers.transfers[0].block_number, 3);
+  assert.equal(fracTransfers.transfers[0].event_index, 1);
 });
 
 test("formatRegistration defaults every sparse field to null/false (null-safe)", () => {
