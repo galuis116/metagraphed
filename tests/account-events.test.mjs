@@ -353,6 +353,14 @@ test("account builders null invalid block heights and indices", () => {
         amount_tao: 2,
         observed_at: null,
       },
+      {
+        block_number: 10,
+        event_index: 2,
+        hotkey: "5A",
+        coldkey: "5B",
+        amount_tao: 3,
+        observed_at: null,
+      },
     ],
     "5A",
   );
@@ -360,6 +368,8 @@ test("account builders null invalid block heights and indices", () => {
   assert.equal(transfers.transfers[0].event_index, null);
   assert.equal(transfers.transfers[1].block_number, null);
   assert.equal(transfers.transfers[1].event_index, null);
+  assert.equal(transfers.transfers[2].block_number, 10);
+  assert.equal(transfers.transfers[2].event_index, 2);
 });
 
 test("formatRegistration defaults every sparse field to null/false (null-safe)", () => {
