@@ -70,6 +70,7 @@ import {
   handleSubnetConcentrationHistory,
   canonicalSubnetConcentrationHistoryCachePath,
   handleSubnetTurnover,
+  canonicalSubnetTurnoverCachePath,
   handleAccount,
   handleAccountHistory,
   handleAccountBalance,
@@ -1262,13 +1263,19 @@ export async function handleRequest(request, env = {}, ctx = {}) {
     if (turnoverMatch) {
       // Boundary-snapshot diff over the neuron_daily rollup, deterministic per
       // cron snapshot — edge-cache like the sibling history routes.
-      return withEdgeCache(request, ctx, env, "subnet-turnover", () =>
-        handleSubnetTurnover(
-          request,
-          env,
-          Number(turnoverMatch[1]),
-          resolved.url,
-        ),
+      return withEdgeCache(
+        request,
+        ctx,
+        env,
+        "subnet-turnover",
+        () =>
+          handleSubnetTurnover(
+            request,
+            env,
+            Number(turnoverMatch[1]),
+            resolved.url,
+          ),
+        canonicalSubnetTurnoverCachePath(resolved.url),
       );
     }
     // Per-UID metagraph (#1304/#1305): computed live from the neurons D1 tier.
