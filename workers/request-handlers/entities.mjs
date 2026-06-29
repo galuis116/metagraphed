@@ -700,7 +700,12 @@ export async function handleAccountTransfers(request, env, ss58, url) {
   const nextCursor = last
     ? encodeCursor([last.block_number, last.event_index])
     : null;
-  const data = buildAccountTransfers(rows, ss58, { limit, offset, nextCursor });
+  const data = buildAccountTransfers(rows, ss58, {
+    limit,
+    offset,
+    nextCursor,
+    direction,
+  });
   return envelopeResponse(
     request,
     {

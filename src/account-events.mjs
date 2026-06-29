@@ -403,11 +403,21 @@ export function buildAccountSubnets(rows, ss58) {
 // ss58: it sent (== from) or received (== to). This is the native-TAO
 // Balances.Transfer feed only, NOT a full balance ledger (stake flows are separate
 // event kinds). Null-safe on a cold store.
+//
+// `direction` (the option) is the side the CALLER filtered on. When it is an
+// explicit `sent`/`received`, every returned row is on that side by construction,
+// so the row is labeled with the requested side — otherwise a self-transfer
+// (from === to === ss58, i.e. hotkey === coldkey === ss58) returned by the
+// received-side query would be mislabeled `sent` by the hotkey-first per-row
+// derivation, contradicting the requested filter (#2362). With no side filter
+// (`all`/omitted) the per-row hotkey-first derivation is kept unchanged.
 export function buildAccountTransfers(
   rows,
   ss58,
-  { limit, offset, nextCursor } = {},
+  { limit, offset, nextCursor, direction } = {},
 ) {
+  const fixedDirection =
+    direction === "sent" || direction === "received" ? direction : null;
   const transfers = (rows || [])
     .filter((r) => r && typeof r === "object")
     .map((r) => ({
@@ -417,7 +427,8 @@ export function buildAccountTransfers(
       to: r.coldkey ?? null,
       amount_tao: r.amount_tao ?? null,
       direction:
-        r.hotkey === ss58 ? "sent" : r.coldkey === ss58 ? "received" : null,
+        fixedDirection ??
+        (r.hotkey === ss58 ? "sent" : r.coldkey === ss58 ? "received" : null),
       observed_at: toIso(r.observed_at),
     }));
   return {
@@ -627,5 +638,9 @@ export async function loadAccountTransfers(
   sql += " ORDER BY block_number DESC, event_index DESC LIMIT ? OFFSET ?";
   params.push(lim, off);
   const rows = await d1(sql, params);
-  return buildAccountTransfers(rows, ss58, { limit: lim, offset: off });
+  return buildAccountTransfers(rows, ss58, {
+    limit: lim,
+    offset: off,
+    direction,
+  });
 }
