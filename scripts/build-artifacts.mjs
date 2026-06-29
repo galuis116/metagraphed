@@ -697,9 +697,7 @@ const candidateIndex = candidates.map((candidate) => ({
   verification:
     fullVerificationByCandidate.get(candidate.id) ||
     fullVerificationResultOrNull(candidate.verification),
-  subnet_name:
-    nativeSnapshot.subnets.find((subnet) => subnet.netuid === candidate.netuid)
-      ?.name || null,
+  subnet_name: nativeByNetuid.get(candidate.netuid)?.name || null,
 }));
 const canonicalCandidateIndex = candidates.map((candidate) => ({
   ...candidate,
@@ -708,9 +706,7 @@ const canonicalCandidateIndex = candidates.map((candidate) => ({
   verification:
     canonicalVerificationByCandidate.get(candidate.id) ||
     fullVerificationResultOrNull(candidate.verification),
-  subnet_name:
-    nativeSnapshot.subnets.find((subnet) => subnet.netuid === candidate.netuid)
-      ?.name || null,
+  subnet_name: nativeByNetuid.get(candidate.netuid)?.name || null,
 }));
 // Dedup'd projections of the candidate index (drop surface-superseded dupes) for
 // the per-subnet detail/profile candidate lists + the enrichment queue (#1002).
@@ -4684,11 +4680,10 @@ function buildSourceHealthArtifact({
     candidateRows,
     (candidate) => candidate.provider || "unknown",
   );
+  const candidateRowsById = new Map(candidateRows.map((row) => [row.id, row]));
   const verificationByProvider = verificationResults.reduce(
     (accumulator, result) => {
-      const candidate = candidateRows.find(
-        (row) => row.id === result.candidate_id,
-      );
+      const candidate = candidateRowsById.get(result.candidate_id);
       const provider = candidate?.provider || "unknown";
       const row = accumulator.get(provider) || {
         provider,
