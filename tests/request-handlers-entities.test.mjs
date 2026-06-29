@@ -36,6 +36,7 @@ import {
   handleExtrinsic,
   canonicalSubnetHistoryCachePath,
   canonicalSubnetTurnoverCachePath,
+  canonicalSubnetMetagraphCachePath,
 } from "../workers/request-handlers/entities.mjs";
 
 const SS58 = "5G9hfkx9wGB1CLMT9WXkpHSAiYzjZb5o1Boyq4KAdDhjwrc5";
@@ -305,10 +306,11 @@ function dbWith({
                   ) {
                     return { results: blockEvents || [] };
                   }
-                  // Account/counterparty pair detail: bounded Transfer scan for
-                  // both directions between two specific SS58 addresses.
+                  // Account/counterparty pair detail: two indexed pair seeks
+                  // (forward + reverse), then one bounded newest-first merge.
                   if (
-                    /event_kind = 'Transfer' AND \(\(hotkey = \? AND coldkey = \?\) OR \(hotkey = \? AND coldkey = \?\)\)/.test(
+                    /UNION ALL/.test(sql) &&
+                    /event_kind = 'Transfer' AND hotkey = \? AND coldkey = \?/.test(
                       sql,
                     )
                   ) {
@@ -1151,6 +1153,38 @@ describe("handleSubnetTurnover", () => {
       assert.equal(key, raw);
     });
   });
+
+  describe("canonicalSubnetMetagraphCachePath", () => {
+    test("omitted validator_permit and explicit =false produce the same cache key", () => {
+      const bare = canonicalSubnetMetagraphCachePath(
+        new URL("https://api.metagraph.sh/api/v1/subnets/1/metagraph"),
+      );
+      const explicitFalse = canonicalSubnetMetagraphCachePath(
+        new URL(
+          "https://api.metagraph.sh/api/v1/subnets/1/metagraph?validator_permit=false",
+        ),
+      );
+      assert.equal(bare, explicitFalse);
+      assert.equal(bare, "/api/v1/subnets/1/metagraph");
+    });
+
+    test("preserves validator_permit=true filter in the cache key", () => {
+      const key = canonicalSubnetMetagraphCachePath(
+        new URL(
+          "https://api.metagraph.sh/api/v1/subnets/1/metagraph?validator_permit=true",
+        ),
+      );
+      assert.equal(key, "/api/v1/subnets/1/metagraph?validator_permit=true");
+    });
+
+    test("returns raw search on an unsupported query parameter", () => {
+      const raw = "/api/v1/subnets/1/metagraph?unknown=1";
+      const key = canonicalSubnetMetagraphCachePath(
+        new URL(`https://api.metagraph.sh${raw}`),
+      );
+      assert.equal(key, raw);
+    });
+  });
 });
 
 describe("handleAccount", () => {
@@ -1680,12 +1714,13 @@ describe("handleAccountCounterparties relationship drilldown", () => {
     assert.equal(body.data.relationship.net_tao, -6);
     assert.equal(body.data.relationship.transfers.length, 1);
     assert.equal(body.data.relationship.transfers[0].direction, "received");
-    const idx = captures.sql.findIndex((s) =>
-      /\(\(hotkey = \? AND coldkey = \?\) OR \(hotkey = \? AND coldkey = \?\)\)/.test(
-        s,
-      ),
+    const idx = captures.sql.findIndex(
+      (s) =>
+        /UNION ALL/.test(s) &&
+        /event_kind = 'Transfer' AND hotkey = \? AND coldkey = \?/.test(s),
     );
     assert.ok(idx !== -1);
+    assert.equal(captures.sql[idx].includes(" OR "), false);
     assert.deepEqual(captures.params[idx].slice(0, 4), [
       SS58,
       COUNTERPARTY,
