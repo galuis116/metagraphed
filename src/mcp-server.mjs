@@ -30,6 +30,7 @@ import {
   parseConcentrationHistoryWindow,
 } from "./concentration.mjs";
 import { loadChainSigners } from "./chain-query-loaders.mjs";
+import { loadBulkHealthTrends } from "./bulk-health-trends.mjs";
 import { loadRpcUsage } from "./rpc-usage-loader.mjs";
 import {
   loadEconomicsTrends,
@@ -197,7 +198,9 @@ export const MCP_INSTRUCTIONS =
   "open slots, and alpha price, get_economics_trends the network-wide " +
   "per-day economics series (stake, alpha price, validator/miner counts), " +
   "get_subnet_trajectory its week-over-week trend, get_subnet_uptime its " +
-  "long-term surface uptime history, get_subnet_health_percentiles its " +
+  "long-term surface uptime history, get_health_trends the all-subnet 7d/30d " +
+  "uptime + latency matrix, get_subnet_health_trends one subnet's per-surface " +
+  "health trends, get_subnet_health_percentiles its " +
   "per-surface p50/p95/p99 request-latency distribution, " +
   "get_subnet_health_incidents its per-surface SLA + reconstructed downtime " +
   "incidents, " +
@@ -1388,6 +1391,28 @@ export const MCP_TOOLS = [
       return loadSubnetHealthTrends(mcpD1Runner(ctx), netuid, {
         observedAt: await mcpObservedAt(ctx),
       });
+    },
+  },
+  {
+    name: "get_health_trends",
+    title: "Get all-subnet health trends",
+    description:
+      "Fetch the compact all-subnet 7d/30d daily uptime + latency trend " +
+      "matrix aggregated from the live health-probe history (probed every " +
+      "~15 minutes). Each subnet carries daily points (uptime ratio, avg " +
+      "latency, sample counts) for sparklines and cross-subnet sorting. Use " +
+      "get_subnet_health_trends for one subnet's per-surface breakdown. " +
+      "Mirrors GET /api/v1/health/trends.",
+    inputSchema: {
+      type: "object",
+      properties: {},
+      additionalProperties: false,
+    },
+    async handler(_args, ctx) {
+      const { data } = await loadBulkHealthTrends(mcpD1Runner(ctx), {
+        observedAt: await mcpObservedAt(ctx),
+      });
+      return data;
     },
   },
   {
@@ -3876,6 +3901,17 @@ const TOOL_OUTPUT_SCHEMAS = {
     properties: {
       schema_version: { type: "integer" },
       netuid: { type: "integer" },
+      observed_at: NULLABLE_STRING,
+      source: NULLABLE_STRING,
+      windows: { type: "object" },
+    },
+  },
+  get_health_trends: {
+    type: "object",
+    additionalProperties: true,
+    required: ["windows"],
+    properties: {
+      schema_version: { type: "integer" },
       observed_at: NULLABLE_STRING,
       source: NULLABLE_STRING,
       windows: { type: "object" },
