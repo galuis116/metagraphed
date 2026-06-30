@@ -580,6 +580,47 @@ describe("feeds — ?until= filter", () => {
       assert.equal(res.status, 400, value);
     }
   });
+
+  test("a bare-date until is inclusive of the whole UTC day (end-of-day)", () => {
+    // The upper bound for a bare calendar date is the day's final millisecond,
+    // so every item stamped during that day is kept — not just the midnight
+    // tick. This mirrors the inclusive start-of-day a bare-date since resolves
+    // to (regression for the date-only until midnight-truncation asymmetry).
+    const untilMs = parseSinceParam("2026-06-30", { endOfDay: true });
+    assert.equal(
+      new Date(untilMs).toISOString(),
+      "2026-06-30T23:59:59.999Z",
+      "bare-date until resolves to end-of-day",
+    );
+
+    const items = [
+      { id: "midnight", timestamp: "2026-06-30T00:00:00.000Z" },
+      { id: "midday", timestamp: "2026-06-30T12:00:00.000Z" },
+      { id: "last-tick", timestamp: "2026-06-30T23:59:59.999Z" },
+      { id: "next-day", timestamp: "2026-07-01T00:00:00.000Z" },
+    ];
+    assert.deepEqual(
+      filterUntil(items, untilMs).map((i) => i.id),
+      ["midnight", "midday", "last-tick"],
+      "keeps all of June 30, excludes July 1",
+    );
+
+    // A same-day since/until pair is a non-empty single-day window, not empty.
+    const sinceMs = parseSinceParam("2026-06-30");
+    assert.deepEqual(
+      filterUntil(filterSince(items, sinceMs), untilMs).map((i) => i.id),
+      ["midnight", "midday", "last-tick"],
+    );
+  });
+
+  test("an explicit date-time until is an exact instant (endOfDay is a no-op)", () => {
+    const exact = "2026-06-30T12:00:00.000Z";
+    assert.equal(
+      parseSinceParam(exact, { endOfDay: true }),
+      Date.parse(exact),
+      "a date-time bound is unaffected by the end-of-day flag",
+    );
+  });
 });
 
 describe("feeds — serializers", () => {

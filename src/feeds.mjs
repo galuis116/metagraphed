@@ -26,7 +26,10 @@
 //
 // Optional `?until=<ISO-8601>` returns only items at or before that instant
 // (same strict parsing as `since`) and composes with `?since=` and `?tag=` to
-// page a bounded window; a malformed `until` is a 400.
+// page a bounded window; a malformed `until` is a 400. A bare calendar date is
+// inclusive of the whole UTC day (end-of-day), so `?until=2026-06-30` keeps
+// every item from June 30 rather than only the midnight tick — symmetric with
+// the inclusive start-of-day a bare-date `?since=` resolves to.
 
 import {
   EXPOSED_RESPONSE_HEADERS_VALUE,
@@ -451,17 +454,27 @@ export function parseFeedPath(pathname) {
   return null;
 }
 
-// Strictly parse the public `?since=` contract instead of delegating validation
-// to Date.parse(), which accepts implementation-defined inputs and normalizes
-// overflow dates. Accepted forms are an ISO calendar date (UTC midnight) or an
-// ISO date-time with an explicit UTC/offset designator.
-function parseSinceParam(value) {
+// Strictly parse the public `?since=`/`?until=` contract instead of delegating
+// validation to Date.parse(), which accepts implementation-defined inputs and
+// normalizes overflow dates. Accepted forms are an ISO calendar date or an ISO
+// date-time with an explicit UTC/offset designator.
+//
+// A bare calendar date denotes a whole UTC day. For a lower bound (`since`) that
+// resolves to the day's first instant (UTC midnight); for an upper bound
+// (`until`, `endOfDay: true`) it resolves to the day's last instant
+// (23:59:59.999Z) so the bound stays inclusive of the named day — `?until=DATE`
+// keeps every item from that day rather than dropping all but the midnight tick.
+// A date-time (with an explicit time) is an exact instant, unaffected by the flag.
+function parseSinceParam(value, { endOfDay = false } = {}) {
   const raw = String(value);
   const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
   if (dateOnly) {
     const [, year, month, day] = dateOnly;
     const ms = Date.UTC(Number(year), Number(month) - 1, Number(day));
-    return new Date(ms).toISOString().slice(0, 10) === raw ? ms : Number.NaN;
+    if (new Date(ms).toISOString().slice(0, 10) !== raw) return Number.NaN;
+    return endOfDay
+      ? Date.UTC(Number(year), Number(month) - 1, Number(day) + 1) - 1
+      : ms;
   }
 
   const match =
@@ -573,7 +586,9 @@ export async function handleFeedRequest(request, env, url, deps = {}) {
   let untilMs = null;
   const untilParam = url.searchParams.get("until");
   if (untilParam != null) {
-    untilMs = parseSinceParam(untilParam);
+    // A bare-date `until` is inclusive of the whole named day (end-of-day),
+    // mirroring the inclusive start-of-day a bare-date `since` resolves to.
+    untilMs = parseSinceParam(untilParam, { endOfDay: true });
     if (Number.isNaN(untilMs)) {
       return fail(
         "invalid_until",
