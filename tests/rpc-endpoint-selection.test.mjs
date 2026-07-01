@@ -210,7 +210,7 @@ describe("isPrivateOrLocalHostname — CGNAT parity (#2312/#2313)", () => {
     assert.equal(isPrivateOrLocalHostname("2606:4700:4700::1111"), false);
   });
 
-  test("rejects IPv4-mapped/compatible/6to4/NAT64 forms of the other private ranges too", () => {
+  test("rejects IPv4-mapped forms of the other private ranges too", () => {
     // ::ffff:127.0.0.1 -> hex-tail ::ffff:7f00:1
     assert.equal(
       isPrivateOrLocalHostname(new URL("https://[::ffff:127.0.0.1]/").hostname),
@@ -223,5 +223,25 @@ describe("isPrivateOrLocalHostname — CGNAT parity (#2312/#2313)", () => {
       ),
       true,
     );
+  });
+
+  // ipv6EmbeddedIpv4 (src/ip-safety.mjs) recognizes three other textual forms
+  // that tunnel an IPv4 address inside IPv6 besides the ::ffff: mapped one
+  // exercised above; pin each so the RPC guard is verified for every form it
+  // now claims to handle, not just the mapped one.
+  test("rejects the deprecated IPv4-compatible ::a.b.c.d form (127.0.0.1)", () => {
+    const hostname = new URL("https://[::127.0.0.1]/").hostname;
+    assert.equal(hostname, "[::7f00:1]");
+    assert.equal(isPrivateOrLocalHostname(hostname), true);
+  });
+
+  test("rejects a 6to4 (2002::/16) literal embedding a private v4 (127.0.0.1)", () => {
+    const hostname = new URL("https://[2002:7f00:1::]/").hostname;
+    assert.equal(isPrivateOrLocalHostname(hostname), true);
+  });
+
+  test("rejects a NAT64 (64:ff9b::/96) literal embedding a private v4 (127.0.0.1)", () => {
+    const hostname = new URL("https://[64:ff9b::7f00:1]/").hostname;
+    assert.equal(isPrivateOrLocalHostname(hostname), true);
   });
 });
