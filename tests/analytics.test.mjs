@@ -699,6 +699,21 @@ describe("formatTrajectory", () => {
     assert.equal(point.validator_count, 9);
     assert.equal(point.total_stake_tao, 2522266);
   });
+  test("preserves sub-4dp emission_share when coercing D1 strings", () => {
+    const out = formatTrajectory({
+      netuid: 4,
+      rows: [
+        {
+          snapshot_date: "2026-06-01",
+          completeness_score: 80,
+          surface_count: 5,
+          endpoint_count: 3,
+          emission_share: "0.000049",
+        },
+      ],
+    });
+    assert.equal(out.points[0].emission_share, 0.000049);
+  });
 });
 
 // --- writeSubnetSnapshot ----------------------------------------------------

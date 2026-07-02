@@ -476,6 +476,11 @@ function round4(value) {
 function roundInt(value) {
   return value == null ? null : Math.round(Number(value));
 }
+function toFiniteOrNull(value) {
+  if (value == null) return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
 
 // p50/p95/p99 + avg/min/max latency per surface, computed in SQL (one row per
 // stable surface). `rows`: [{ surface_id, surface_key?, samples, p50, p95, p99,
@@ -1019,9 +1024,9 @@ export function formatTrajectory({ netuid, rows }) {
       // existed / when economics was unavailable that day.
       validator_count: roundInt(row.validator_count),
       miner_count: roundInt(row.miner_count),
-      total_stake_tao: round4(row.total_stake_tao),
-      alpha_price_tao: round4(row.alpha_price_tao),
-      emission_share: round4(row.emission_share),
+      total_stake_tao: toFiniteOrNull(row.total_stake_tao),
+      alpha_price_tao: toFiniteOrNull(row.alpha_price_tao),
+      emission_share: toFiniteOrNull(row.emission_share),
     }))
     .sort((a, b) => String(a.date).localeCompare(String(b.date)));
 
