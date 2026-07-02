@@ -687,6 +687,28 @@ describe("list-query unknown query parameters", () => {
       delete API_QUERY_COLLECTIONS.__test_sparse_list_query;
     }
   });
+
+  test("handles collection config with no filters object", () => {
+    API_QUERY_COLLECTIONS.__test_no_filters_list_query = {
+      data_key: "rows",
+      search_keys: [],
+      sort_fields: ["netuid"],
+    };
+    try {
+      const ok = applyQueryFilters(
+        { rows: [{ netuid: 2 }, { netuid: 1 }] },
+        query("/api/v1/custom?sort=netuid&order=asc&limit=5"),
+        "__test_no_filters_list_query",
+      );
+      assert.equal(ok.error, undefined);
+      assert.deepEqual(
+        ok.data.rows.map((row) => row.netuid),
+        [1, 2],
+      );
+    } finally {
+      delete API_QUERY_COLLECTIONS.__test_no_filters_list_query;
+    }
+  });
 });
 
 describe("list-query pagination Link header", () => {

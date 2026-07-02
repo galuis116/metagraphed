@@ -28,8 +28,8 @@ export function applyQueryFilters(
     filters: Object.fromEntries(
       (queryFilterNames.length > 0
         ? queryFilterNames
-        : Object.keys(config.filters)
-      ).map((name) => [name, config.filters[name]]),
+        : Object.keys(config.filters ?? {})
+      ).map((name) => [name, config.filters?.[name]]),
     ),
   });
 }
