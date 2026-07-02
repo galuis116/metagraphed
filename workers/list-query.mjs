@@ -320,6 +320,30 @@ function paginateRows(rows, params) {
 }
 
 function validateListQuery(params, config) {
+  const allowedParams = new Set([
+    "q",
+    "fields",
+    "limit",
+    "cursor",
+    "sort",
+    "order",
+    ...Object.keys(config.filters || {}),
+    ...Object.keys(config.csv_filters || {}),
+    ...Object.keys(config.array_filters || {}),
+    ...(config.range_filters || []).flatMap((field) => [
+      `min_${field}`,
+      `max_${field}`,
+    ]),
+  ]);
+  for (const key of params.keys()) {
+    if (!allowedParams.has(key)) {
+      return {
+        parameter: key,
+        message: "unknown query parameter.",
+      };
+    }
+  }
+
   const limit = params.get("limit");
   if (
     limit !== null &&

@@ -565,6 +565,38 @@ describe("list-query endpoint pool count range filters (#2587)", () => {
   }
 });
 
+describe("list-query unknown query parameters", () => {
+  const data = {
+    subnets: [{ netuid: 1, name: "Alpha", status: "active" }],
+  };
+
+  test("unknown params are rejected with an explicit query error", () => {
+    const result = applyQueryFilters(
+      data,
+      query("/api/v1/subnets?statuss=active"),
+      "subnets",
+    );
+    assert.equal(result.error.parameter, "statuss");
+    assert.equal(result.error.message, "unknown query parameter.");
+  });
+
+  test("known params are still accepted", () => {
+    const result = applyQueryFilters(
+      data,
+      query("/api/v1/subnets?status=active&limit=10"),
+      "subnets",
+    );
+    assert.equal(result.error, undefined);
+    assert.equal(result.data.subnets.length, 1);
+  });
+
+  test("empty query params remain valid", () => {
+    const result = applyQueryFilters(data, query("/api/v1/subnets"), "subnets");
+    assert.equal(result.error, undefined);
+    assert.equal(result.data.subnets.length, 1);
+  });
+});
+
 describe("list-query pagination Link header", () => {
   test("first page: next + last only (no earlier page exists)", () => {
     const links = parseLink(pageLink("/api/v1/subnets?sort=netuid&limit=2"));
@@ -665,17 +697,16 @@ describe("list-query pagination Link header", () => {
     }
   });
 
-  test("drops ignored query parameters from cacheable page links", () => {
-    const links = parseLink(
-      pageLink(
-        "/api/v1/subnets?sort=netuid&limit=2&utm_campaign=evil&token=SECRET123",
-      ),
+  test("rejects unknown params instead of emitting page links", () => {
+    const result = applyQueryFilters(
+      {
+        subnets: Array.from({ length: 5 }, (_, i) => ({ netuid: i })),
+      },
+      query("/api/v1/subnets?sort=netuid&limit=2&utm_campaign=evil"),
+      "subnets",
     );
-
-    assert.equal(links.next.searchParams.get("sort"), "netuid");
-    assert.equal(links.next.searchParams.get("limit"), "2");
-    assert.equal(links.next.searchParams.has("utm_campaign"), false);
-    assert.equal(links.next.searchParams.has("token"), false);
+    assert.equal(result.error.parameter, "utm_campaign");
+    assert.equal(result.error.message, "unknown query parameter.");
   });
 
   test("a non-list (no pagination meta) collection yields no header", () => {
