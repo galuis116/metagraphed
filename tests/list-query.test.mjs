@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, test } from "vitest";
+import { API_QUERY_COLLECTIONS } from "../src/contracts.mjs";
 import {
   applyQueryFilters,
   canonicalListSearch,
@@ -659,6 +660,32 @@ describe("list-query unknown query parameters", () => {
     assert.equal(search.includes("kind=docs"), true);
     assert.equal(search.includes("layer=inference"), false);
     assert.equal(search.includes("junk=1"), false);
+  });
+
+  test("handles sparse collection config without optional filter families", () => {
+    API_QUERY_COLLECTIONS.__test_sparse_list_query = {
+      data_key: "rows",
+      filters: { status: { type: "string" } },
+      search_keys: [],
+      sort_fields: ["netuid"],
+    };
+    try {
+      const result = applyQueryFilters(
+        { rows: [{ netuid: 1, status: "active" }] },
+        query("/api/v1/custom?status=active"),
+        "__test_sparse_list_query",
+      );
+      assert.equal(result.error, undefined);
+      assert.equal(result.data.rows.length, 1);
+      const search = canonicalListSearch(
+        query("/api/v1/custom?status=active&junk=1"),
+        "__test_sparse_list_query",
+      );
+      assert.equal(search.includes("status=active"), true);
+      assert.equal(search.includes("junk=1"), false);
+    } finally {
+      delete API_QUERY_COLLECTIONS.__test_sparse_list_query;
+    }
   });
 });
 

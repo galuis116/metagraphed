@@ -168,7 +168,7 @@ function filterRows(rows, params, keys, csvFilters = {}, arrayFilters = {}) {
 // F is absent / non-numeric can't satisfy a bound, so it is excluded once any
 // bound on F is set. Validation (validateListQuery) has already confirmed every
 // present min_/max_ param is a finite number, so Number() here is safe.
-function rangeFilterRows(rows, params, rangeFields) {
+function rangeFilterRows(rows, params, rangeFields = []) {
   const bounds = [];
   for (const field of rangeFields) {
     const min = params.get(`min_${field}`);
@@ -375,7 +375,7 @@ function validateListQuery(params, config) {
     };
   }
 
-  for (const [key, schema] of Object.entries(config.filters)) {
+  for (const [key, schema] of Object.entries(config.filters ?? {})) {
     if (!params.has(key)) {
       continue;
     }
@@ -410,7 +410,7 @@ function validateListQuery(params, config) {
     }
   }
 
-  for (const field of config.range_filters) {
+  for (const field of config.range_filters ?? []) {
     for (const bound of ["min", "max"]) {
       const key = `${bound}_${field}`;
       if (params.has(key) && numberParam(params.get(key)) === null) {
