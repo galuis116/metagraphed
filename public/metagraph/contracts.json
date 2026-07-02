@@ -237,7 +237,7 @@
     {
       "content_type": "application/json",
       "contract_version": "2026-06-30.14",
-      "description": "Per-subnet validator and economic metrics from the chain: validator/miner counts, total + max stake, registration cost, alpha price, and derived price-weighted emission share.",
+      "description": "Per-subnet validator and economic metrics from the chain: validator/miner counts, total + max stake, registration cost, alpha price, derived price-weighted emission share, and on-chain registration block height.",
       "id": "economics",
       "path": "/metagraph/economics.json",
       "schema_ref": "#/components/schemas/EconomicsArtifact",
@@ -583,6 +583,15 @@
       "id": "subnet-history",
       "path": "/metagraph/subnets/{netuid}/history.json",
       "schema_ref": "#/components/schemas/SubnetHistoryArtifact",
+      "storage_tier": "r2"
+    },
+    {
+      "content_type": "application/json",
+      "contract_version": "2026-06-30.14",
+      "description": "Append-only on-chain identity timeline for one subnet (SubnetIdentitiesV3 field snapshots on change), served live from the subnet_identity_history D1 tier at /api/v1/subnets/{netuid}/identity-history (no static file).",
+      "id": "subnet-identity-history",
+      "path": "/metagraph/subnets/{netuid}/identity-history.json",
+      "schema_ref": "#/components/schemas/SubnetIdentityHistoryArtifact",
       "storage_tier": "r2"
     },
     {
