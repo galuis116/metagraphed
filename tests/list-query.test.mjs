@@ -705,6 +705,12 @@ describe("list-query unknown query parameters", () => {
         ok.data.rows.map((row) => row.netuid),
         [1, 2],
       );
+      const canonical = canonicalListSearch(
+        query("/api/v1/custom?sort=netuid&junk=1"),
+        "__test_no_filters_list_query",
+      );
+      assert.equal(canonical.includes("sort=netuid"), true);
+      assert.equal(canonical.includes("junk=1"), false);
     } finally {
       delete API_QUERY_COLLECTIONS.__test_no_filters_list_query;
     }

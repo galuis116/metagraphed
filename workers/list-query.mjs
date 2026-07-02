@@ -416,7 +416,7 @@ function validateListQuery(params, config, queryFilterNames = []) {
     };
   }
 
-  for (const [key, schema] of Object.entries(config.filters ?? {})) {
+  for (const [key, schema] of Object.entries(config.filters)) {
     if (!params.has(key)) {
       continue;
     }
