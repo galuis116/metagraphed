@@ -23,17 +23,22 @@ export function applyQueryFilters(
   if (!Array.isArray(data?.[config.data_key])) {
     return { data, meta: {} };
   }
-  return applyListTransform(data, params, {
-    ...config,
-    filters: Object.fromEntries(
-      (queryFilterNames.length > 0
-        ? queryFilterNames
-        : Object.keys(config.filters ?? {})
-      )
-        .map((name) => [name, config.filters?.[name]])
-        .filter(([, schema]) => schema && typeof schema === "object"),
-    ),
-  });
+  return applyListTransform(
+    data,
+    params,
+    {
+      ...config,
+      filters: Object.fromEntries(
+        (queryFilterNames.length > 0
+          ? queryFilterNames
+          : Object.keys(config.filters ?? {})
+        )
+          .map((name) => [name, config.filters?.[name]])
+          .filter(([, schema]) => schema && typeof schema === "object"),
+      ),
+    },
+    queryFilterNames,
+  );
 }
 
 // RFC 8288 Link header for a cursor-paginated response (window from
@@ -49,10 +54,13 @@ function listQueryParamNames(queryCollection, queryFilterNames = []) {
 }
 
 function listQueryParamNamesFromConfig(config, queryFilterNames = []) {
+  const configuredFilters = config.filters ?? {};
   const filterNames =
     queryFilterNames.length > 0
-      ? queryFilterNames
-      : Object.keys(config.filters);
+      ? queryFilterNames.filter((name) =>
+          Object.hasOwn(configuredFilters, name),
+        )
+      : Object.keys(configuredFilters);
   const rangeNames = (config.range_filters ?? []).flatMap((field) => [
     `min_${field}`,
     `max_${field}`,
@@ -192,8 +200,8 @@ function rangeFilterRows(rows, params, rangeFields = []) {
   );
 }
 
-function applyListTransform(data, params, config) {
-  const queryError = validateListQuery(params, config);
+function applyListTransform(data, params, config, queryFilterNames = []) {
+  const queryError = validateListQuery(params, config, queryFilterNames);
   if (queryError) {
     return { error: queryError };
   }
@@ -325,8 +333,10 @@ function paginateRows(rows, params) {
   };
 }
 
-function validateListQuery(params, config) {
-  const allowedParams = new Set(listQueryParamNamesFromConfig(config));
+function validateListQuery(params, config, queryFilterNames = []) {
+  const allowedParams = new Set(
+    listQueryParamNamesFromConfig(config, queryFilterNames),
+  );
   for (const key of params.keys()) {
     if (!allowedParams.has(key)) {
       return {
