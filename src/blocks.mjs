@@ -142,8 +142,10 @@ export function buildBlock(row, ref, { prev, next } = {}) {
     schema_version: 1,
     ref: ref ?? null,
     block,
-    prev_block_number: block ? (prev ?? null) : null,
-    next_block_number: block ? (next ?? null) : null,
+    // MAX/MIN neighbor cells are INTEGER in D1 but can surface as numeric strings;
+    // coerce like formatBlock's block_number so nav fields stay schema-typed.
+    prev_block_number: block ? toBlockNumber(prev) : null,
+    next_block_number: block ? toBlockNumber(next) : null,
   };
 }
 

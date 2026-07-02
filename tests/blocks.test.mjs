@@ -226,7 +226,7 @@ test("loadBlock resolves neighbors when D1 returns a string-typed block_number (
     if (/MAX\(block_number\)/.test(sql)) {
       // The anchor must be bound as a Number, not the raw "1234" string.
       assert.deepEqual(params, [1234, 1234]);
-      return [{ prev: 1230, next: 1240 }];
+      return [{ prev: "1230", next: "1240" }];
     }
     return [];
   };
@@ -234,6 +234,17 @@ test("loadBlock resolves neighbors when D1 returns a string-typed block_number (
   assert.equal(out.block.block_number, 1234);
   assert.equal(out.prev_block_number, 1230);
   assert.equal(out.next_block_number, 1240);
+  assert.equal(typeof out.prev_block_number, "number");
+  assert.equal(typeof out.next_block_number, "number");
+});
+
+test("buildBlock coerces string-typed neighbor block numbers (#1853)", () => {
+  const row = { block_number: 1234, block_hash: "0xabc", observed_at: 1 };
+  const out = buildBlock(row, "1234", { prev: "1230", next: "1240" });
+  assert.equal(out.prev_block_number, 1230);
+  assert.equal(out.next_block_number, 1240);
+  assert.equal(typeof out.prev_block_number, "number");
+  assert.equal(typeof out.next_block_number, "number");
 });
 
 test("buildBlock defaults a null/absent ref to null (regression)", () => {
