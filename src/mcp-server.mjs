@@ -26,6 +26,12 @@ import {
   loadNetworkEconomics,
 } from "./network-economics.mjs";
 import {
+  GET_NETWORK_HEALTH_INSTRUCTIONS,
+  GET_NETWORK_HEALTH_MCP_TOOL,
+  GET_NETWORK_HEALTH_OUTPUT_SCHEMA,
+  loadGlobalOperationalHealth,
+} from "./global-operational-health.mjs";
+import {
   loadChainConcentration,
   loadSubnetConcentration,
   loadSubnetConcentrationHistory,
@@ -252,7 +258,9 @@ export const MCP_INSTRUCTIONS =
   "get_economics_trends the network-wide " +
   "per-day economics series (stake, alpha price, validator/miner counts), " +
   "get_subnet_trajectory its week-over-week trend, get_subnet_uptime its " +
-  "long-term surface uptime history, get_health_trends the all-subnet 7d/30d " +
+  "long-term surface uptime history, " +
+  GET_NETWORK_HEALTH_INSTRUCTIONS +
+  "get_health_trends the all-subnet 7d/30d " +
   "uptime + latency matrix, get_subnet_health_trends one subnet's per-surface " +
   "health trends, get_subnet_health_percentiles its " +
   "per-surface p50/p95/p99 request-latency distribution, " +
@@ -1531,6 +1539,19 @@ export const MCP_TOOLS = [
       );
       const live = await mcpLiveHealth(ctx);
       return overlayOverviewHealth(overview, live, netuid) || overview;
+    },
+  },
+  {
+    ...GET_NETWORK_HEALTH_MCP_TOOL,
+    async handler(_args, ctx) {
+      return loadGlobalOperationalHealth(
+        {
+          env: ctx.env,
+          readHealthKv: ctx.readHealthKv,
+          db: ctx.env?.METAGRAPH_HEALTH_DB,
+        },
+        { contractVersion: () => mcpContractVersion(ctx) },
+      );
     },
   },
   {
@@ -5119,6 +5140,7 @@ const TOOL_OUTPUT_SCHEMAS = {
     },
   },
   get_economics: GET_ECONOMICS_OUTPUT_SCHEMA,
+  get_network_health: GET_NETWORK_HEALTH_OUTPUT_SCHEMA,
   get_subnet_trajectory: {
     type: "object",
     additionalProperties: true,
