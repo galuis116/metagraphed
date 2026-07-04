@@ -164,6 +164,17 @@ test("chain-events/stats returns the activity aggregate with a clamped window", 
   ).toBe(1000);
 });
 
+test("chain-events/stats ranks with a deterministic tie-break on the group key", async () => {
+  const res = await req("/api/v1/chain-events/stats?blocks=500");
+  expect(res.status).toBe(200);
+  // count is non-unique; the ranking must tie-break on the GROUP BY key so the
+  // order and the LIMIT 100 boundary membership are stable across identical
+  // requests rather than left to Postgres' unordered equal-count grouping.
+  const stats = sqlCalls.at(-1).text;
+  expect(stats).toContain("ORDER BY count DESC, pallet ASC, method ASC");
+  expect(stats).not.toMatch(/ORDER BY count DESC\s+LIMIT/);
+});
+
 test("chain-events/stats floors fractional blocks before binding", async () => {
   const res = await req("/api/v1/chain-events/stats?blocks=1.5");
   expect(res.status).toBe(200);

@@ -181,12 +181,18 @@ export default {
       // 1000, capped 5000). Bounded window + capped output keep it index-cheap.
       if (url.pathname === "/api/v1/chain-events/stats") {
         const blocks = clampStatsBlocks(url.searchParams.get("blocks"));
+        // count is a non-unique sort key, so ORDER BY count alone leaves ties
+        // unordered — and over Hyperdrive's pooled connections (prepare:false)
+        // Postgres can plan/scan identical requests differently, reshuffling
+        // equal-count groups and flipping which groups survive LIMIT 100 at the
+        // boundary. Tie-break on the GROUP BY key (unique per row) for a total,
+        // stable order, matching the keyset orders on the sibling queries above.
         const rows = await sql`
           SELECT pallet, method, count(*)::int AS count
           FROM chain_events
           WHERE block_number > (SELECT max(block_number) FROM chain_events) - ${blocks}
           GROUP BY pallet, method
-          ORDER BY count DESC
+          ORDER BY count DESC, pallet ASC, method ASC
           LIMIT 100`;
         return json({
           window_blocks: blocks,
