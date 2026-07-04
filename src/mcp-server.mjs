@@ -11,7 +11,9 @@
 // this module is pure and unit-testable, and so it reuses the exact same
 // R2/ASSETS resolution the REST routes use.
 import {
+  ANALYTICS_WINDOWS,
   DAY_MS,
+  DEFAULT_ANALYTICS_WINDOW,
   resolveClientIp,
   SS58_ADDRESS_PATTERN,
 } from "../workers/config.mjs";
@@ -118,6 +120,11 @@ import {
   DEFAULT_CHAIN_TRANSFER_PAIR_WINDOW,
   CHAIN_TRANSFER_PAIR_SORTS,
 } from "./chain-transfer-pairs.mjs";
+import {
+  loadChainServing,
+  CHAIN_SERVING_LIMIT_DEFAULT,
+  CHAIN_SERVING_LIMIT_MAX,
+} from "./chain-serving.mjs";
 import {
   loadEconomicsTrends,
   parseEconomicsTrendsWindow,
@@ -268,7 +275,7 @@ const MCP_LATEST_PROTOCOL = MCP_PROTOCOL_VERSIONS[0];
 //   - change or remove a tool's I/O       → MAJOR
 //   - behavioral-only fix (no I/O change) → PATCH
 // Reported in serverInfo.version (initialize) + the generated server-card.json.
-export const MCP_SERVER_VERSION = "1.29.0";
+export const MCP_SERVER_VERSION = "1.30.0";
 
 // Window labels accepted by get_chain_transfers — derived from the loader constant
 // so input/output schemas and runtime validation cannot drift.
@@ -279,6 +286,9 @@ const CHAIN_WEIGHTS_WINDOW_KEYS = Object.keys(CHAIN_WEIGHTS_WINDOWS);
 const CHAIN_TRANSFER_PAIR_WINDOW_KEYS = Object.keys(
   CHAIN_TRANSFER_PAIR_WINDOWS,
 );
+// get_chain_serving mirrors the /api/v1/chain/serving route, which uses the shared
+// ANALYTICS_WINDOWS (7d/30d) rather than a dedicated window constant.
+const CHAIN_SERVING_WINDOW_KEYS = Object.keys(ANALYTICS_WINDOWS);
 const STAKE_FLOW_WINDOW_KEYS = Object.keys(STAKE_FLOW_WINDOWS);
 const MOVERS_WINDOW_KEYS = Object.keys(MOVERS_WINDOWS);
 
@@ -402,6 +412,9 @@ export const MCP_INSTRUCTIONS =
   "(per-subnet net TAO staked/unstaked and direction) across all subnets, " +
   "get_chain_weights the network-wide validator weight-setting leaderboard " +
   "(per-subnet WeightsSet activity, distinct setters, and update intensity) " +
+  "across all subnets, " +
+  "get_chain_serving the network-wide axon-serving leaderboard " +
+  "(per-subnet AxonServed activity, distinct servers, and announcement intensity) " +
   "across all subnets, " +
   "get_blocks_summary block-production analytics (inter-block time, throughput, " +
   "and block-author decentralization), " +
@@ -2216,6 +2229,56 @@ export const MCP_TOOLS = [
       return loadChainWeights(mcpD1Runner(ctx), {
         windowLabel: window,
         windowDays: CHAIN_WEIGHTS_WINDOWS[window],
+        limit,
+      });
+    },
+  },
+  {
+    name: "get_chain_serving",
+    title: "Get network-wide axon-serving activity",
+    description:
+      "Fetch the network-wide axon-serving announcement leaderboard over the " +
+      "requested window (7d or 30d; default 7d): each subnet ranked by AxonServed " +
+      "events with its distinct-server count and announcements-per-server " +
+      "intensity, plus a network rollup with the TRUE distinct server count (a " +
+      "hotkey announcing on several subnets counts once) and total announcements, " +
+      "and the count/mean/min/p25/median/p75/p90/max spread of per-subnet " +
+      "re-announcement intensity, summed live from the account_events stream. The " +
+      "serving-availability companion to get_chain_weights (consensus " +
+      "maintenance). Mirrors GET /api/v1/chain/serving.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        window: {
+          type: "string",
+          enum: CHAIN_SERVING_WINDOW_KEYS,
+          description: `Lookback window (default ${DEFAULT_ANALYTICS_WINDOW}).`,
+        },
+        limit: {
+          type: "integer",
+          description: `Max subnets in the axon-serving leaderboard (1-${CHAIN_SERVING_LIMIT_MAX}, default ${CHAIN_SERVING_LIMIT_DEFAULT}).`,
+          minimum: 1,
+          maximum: CHAIN_SERVING_LIMIT_MAX,
+        },
+      },
+      additionalProperties: false,
+    },
+    async handler(args, ctx) {
+      const window = optionalString(args, "window") ?? DEFAULT_ANALYTICS_WINDOW;
+      if (!Object.hasOwn(ANALYTICS_WINDOWS, window)) {
+        throw toolError(
+          "invalid_params",
+          `window must be one of: ${CHAIN_SERVING_WINDOW_KEYS.join(", ")}.`,
+        );
+      }
+      const limit = clampLimit(
+        args?.limit,
+        CHAIN_SERVING_LIMIT_DEFAULT,
+        CHAIN_SERVING_LIMIT_MAX,
+      );
+      return loadChainServing(mcpD1Runner(ctx), {
+        windowLabel: window,
+        windowDays: ANALYTICS_WINDOWS[window],
         limit,
       });
     },
@@ -6064,6 +6127,82 @@ const TOOL_OUTPUT_SCHEMAS = {
             distinct_setters: { type: "integer" },
             weight_sets: { type: "integer" },
             sets_per_setter: { type: "number" },
+          },
+        },
+      },
+    },
+  },
+  get_chain_serving: {
+    type: "object",
+    additionalProperties: true,
+    required: ["subnet_count", "network", "subnets"],
+    properties: {
+      schema_version: { type: "integer" },
+      window: NULLABLE_STRING,
+      observed_at: NULLABLE_STRING,
+      subnet_count: { type: "integer" },
+      // Network rollup with the TRUE distinct server count (a hotkey announcing on
+      // several subnets counts once). announcements_per_server is null when the
+      // network-wide distinct-server count is unavailable/zero (no divide-by-zero).
+      network: {
+        type: "object",
+        additionalProperties: false,
+        required: [
+          "distinct_servers",
+          "announcements",
+          "announcements_per_server",
+        ],
+        properties: {
+          distinct_servers: { type: "integer" },
+          announcements: { type: "integer" },
+          announcements_per_server: { type: ["number", "null"] },
+        },
+      },
+      // Spread of per-subnet re-announcement intensity (AxonServed events per
+      // server) over EVERY serving subnet; null when no subnet announced in the window.
+      intensity_distribution: {
+        type: ["object", "null"],
+        additionalProperties: false,
+        required: [
+          "count",
+          "mean",
+          "min",
+          "p25",
+          "median",
+          "p75",
+          "p90",
+          "max",
+        ],
+        properties: {
+          count: { type: "integer" },
+          mean: { type: "number" },
+          min: { type: "number" },
+          p25: { type: "number" },
+          median: { type: "number" },
+          p75: { type: "number" },
+          p90: { type: "number" },
+          max: { type: "number" },
+        },
+      },
+      // Per-subnet axon-serving leaderboard, most AxonServed events first. Each
+      // listed subnet has at least one distinct server, so announcements_per_server
+      // is always a finite number here (never divide-by-zero).
+      subnets: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: [
+            "netuid",
+            "distinct_servers",
+            "announcements",
+            "announcements_per_server",
+          ],
+          properties: {
+            netuid: { type: "integer" },
+            distinct_servers: { type: "integer" },
+            announcements: { type: "integer" },
+            announcements_per_server: { type: "number" },
           },
         },
       },

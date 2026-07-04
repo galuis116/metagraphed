@@ -6736,6 +6736,114 @@ describe("MCP economics + metagraph data tools", () => {
     assert.ok(validate(res.body.result.structuredContent));
   });
 
+  // get_chain_serving twins get_chain_weights: loadChainServing reads a network
+  // aggregate first (non-null newest_observed unlocks the per-subnet GROUP BY read).
+  function servingNetwork(announcements, distinct_servers) {
+    return {
+      announcements,
+      distinct_servers,
+      newest_observed: 1_750_000_000_000,
+    };
+  }
+  function servingRow(netuid, announcements, distinct_servers) {
+    return { netuid, announcements, distinct_servers };
+  }
+  function chainServingEnv(network, subnets) {
+    return {
+      env: {
+        METAGRAPH_HEALTH_DB: {
+          prepare(sql) {
+            return {
+              bind: () => ({
+                all: () =>
+                  Promise.resolve({
+                    results: /GROUP BY netuid/.test(sql)
+                      ? subnets
+                      : network
+                        ? [network]
+                        : [],
+                  }),
+              }),
+            };
+          },
+        },
+      },
+    };
+  }
+
+  test("get_chain_serving returns schema-stable zeros on cold D1", async () => {
+    const res = await callTool("get_chain_serving", {});
+    const out = res.body.result.structuredContent;
+    assert.equal(res.body.result.isError, false);
+    assert.equal(out.window, "7d"); // REST default window parity
+    assert.equal(out.subnet_count, 0);
+    assert.deepEqual(out.subnets, []);
+    assert.equal(out.intensity_distribution, null);
+    assert.equal(out.network.announcements, 0);
+    assert.equal(out.network.announcements_per_server, null);
+    assert.equal(out.observed_at, null);
+  });
+
+  test("get_chain_serving ranks subnets by announcements with a network rollup", async () => {
+    const res = await callTool(
+      "get_chain_serving",
+      { window: "30d", limit: 10 },
+      chainServingEnv(servingNetwork(30, 8), [
+        // netuid 2: fewer announcements -> ranks last despite higher intensity.
+        servingRow(2, 10, 4),
+        // netuid 1: most AxonServed events -> ranks first.
+        servingRow(1, 20, 5),
+      ]),
+    );
+    const out = res.body.result.structuredContent;
+    assert.equal(out.window, "30d");
+    assert.equal(out.subnet_count, 2);
+    assert.equal(out.subnets[0].netuid, 1);
+    assert.equal(out.subnets[0].announcements, 20);
+    assert.equal(out.subnets[0].announcements_per_server, 4); // 20 / 5
+    assert.equal(out.subnets[1].netuid, 2);
+    assert.equal(out.subnets[1].announcements_per_server, 2.5); // 10 / 4
+    assert.equal(out.network.announcements, 30);
+    assert.equal(out.network.distinct_servers, 8);
+    assert.equal(out.network.announcements_per_server, 3.75);
+    assert.equal(out.intensity_distribution.count, 2);
+    assert.equal(out.observed_at, new Date(1_750_000_000_000).toISOString());
+  });
+
+  test("get_chain_serving rejects an unsupported window", async () => {
+    const res = await callTool("get_chain_serving", { window: "90d" }, {});
+    assert.equal(res.body.result.isError, true);
+    assert.match(res.body.result.content[0].text, /window/);
+  });
+
+  test("get_chain_serving caps the leaderboard by limit", async () => {
+    const res = await callTool(
+      "get_chain_serving",
+      { limit: 1 },
+      chainServingEnv(servingNetwork(30, 8), [
+        servingRow(1, 20, 5),
+        servingRow(2, 10, 4),
+      ]),
+    );
+    const out = res.body.result.structuredContent;
+    assert.equal(out.subnet_count, 2);
+    assert.equal(out.subnets.length, 1);
+    assert.equal(out.intensity_distribution.count, 2);
+  });
+
+  test("get_chain_serving payload validates against its declared outputSchema", async () => {
+    const schema = listToolDefinitions().find(
+      (t) => t.name === "get_chain_serving",
+    )?.outputSchema;
+    const res = await callTool(
+      "get_chain_serving",
+      {},
+      chainServingEnv(servingNetwork(30, 8), [servingRow(1, 20, 5)]),
+    );
+    const validate = new Ajv2020().compile(schema);
+    assert.ok(validate(res.body.result.structuredContent));
+  });
+
   test("get_subnet_concentration_history defaults to 30d and returns points", async () => {
     const res = await callTool(
       "get_subnet_concentration_history",
