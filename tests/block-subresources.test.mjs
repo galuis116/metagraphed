@@ -81,6 +81,24 @@ describe("resolveBlockNumber", () => {
     const n = await resolveBlockNumber(d1, "9999999");
     assert.equal(n, null);
   });
+
+  test("coerces a string-typed D1 block_number to an integer", async () => {
+    // Some D1 read paths return the INTEGER block_number as a string; the
+    // resolved height must be a number so the envelope field is not off-contract.
+    const numericRef = await resolveBlockNumber(
+      d1With({ blockByNumber: [{ block_number: "4200000" }] }),
+      "4200000",
+    );
+    assert.equal(numericRef, 4_200_000);
+    assert.equal(typeof numericRef, "number");
+
+    const hashRef = await resolveBlockNumber(
+      d1With({ blockByHash: [{ block_number: "4200000" }] }),
+      "0x" + "a".repeat(64),
+    );
+    assert.equal(hashRef, 4_200_000);
+    assert.equal(typeof hashRef, "number");
+  });
 });
 
 describe("loadBlockExtrinsics", () => {

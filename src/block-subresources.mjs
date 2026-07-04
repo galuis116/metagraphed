@@ -27,7 +27,14 @@ export async function resolveBlockNumber(d1, ref) {
       : `SELECT block_number FROM blocks WHERE block_number = ? LIMIT 1`,
     [isHash ? String(ref).toLowerCase() : refBlockNumber],
   );
-  return rows[0]?.block_number ?? null;
+  // Coerce the resolved cell: some D1 read paths return the INTEGER block_number
+  // as a string, and this height flows straight into the envelope block_number of
+  // both buildBlockExtrinsics/buildBlockEvents. Without coercion the top-level
+  // field leaks as a JSON string while the nested rows (formatAccountEvent /
+  // formatExtrinsic) coerce theirs — an inconsistent, off-contract payload.
+  // strictBlockNumber accepts a real integer or an all-digits string and rejects
+  // anything else to null, matching the "unknown ref → null block_number" shape.
+  return strictBlockNumber(rows[0]?.block_number);
 }
 
 export async function loadBlockExtrinsics(d1, ref, { limit, offset } = {}) {
