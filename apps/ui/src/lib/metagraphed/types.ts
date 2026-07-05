@@ -1174,6 +1174,24 @@ export interface SubnetStakeMoves {
 }
 
 /**
+ * Per-subnet stake-transfer activity over a 7d/30d window (#3484), from
+ * /api/v1/subnets/{netuid}/stake-transfers — the per-subnet drill-in of
+ * /api/v1/chain/stake-transfers and the between-accounts sibling of
+ * /subnets/{netuid}/stake-moves (transfer_stake relocates staked alpha between
+ * accounts on the same hotkey; origin leg only). Zeroed when the subnet had no
+ * StakeTransferred events in the window.
+ */
+export interface SubnetStakeTransfers {
+  schema_version: number;
+  netuid: number;
+  window: string | null;
+  observed_at: string | null;
+  distinct_senders: number;
+  transfers: number;
+  transfers_per_sender: number | null;
+}
+
+/**
  * Per-subnet axon-serving announcement activity over a 7d/30d window, from
  * /api/v1/subnets/{netuid}/serving. Zeroed when the subnet had no AxonServed
  * events in the window.
