@@ -198,5 +198,8 @@
       "url": "https://api.green-compute.com/healthz"
     }
   ],
+  "social": {
+    "x": "https://x.com/vocence_bt"
+  },
   "website_url": "https://www.green-compute.com/"
 }
