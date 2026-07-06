@@ -274,6 +274,25 @@
         "https://www.gradients.io/"
       ],
       "url": "https://api.gradients.io/tournament/fees"
+    },
+    {
+      "auth_required": false,
+      "authority": "community",
+      "id": "sn-56-gradients-latest-tournament-details",
+      "kind": "subnet-api",
+      "name": "Gradients latest tournament details",
+      "notes": "Public no-auth GET returning the most recently completed text/image/environment tournament results (winner hotkey, participants, final standings). Documented in the subnet's own OpenAPI (api.gradients.io/openapi.json, path /tournament/latest/details); same host as the existing performance, network-status, healthz, and tournament-fees subnet-api surfaces.",
+      "provider": "gradients",
+      "public_safe": true,
+      "review": {
+        "state": "community-submitted",
+        "submitted_by": "galuis116"
+      },
+      "source_urls": [
+        "https://api.gradients.io/openapi.json",
+        "https://www.gradients.io/"
+      ],
+      "url": "https://api.gradients.io/tournament/latest/details"
     }
   ],
   "website_url": "https://www.gradients.io/"
