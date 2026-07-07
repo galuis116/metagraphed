@@ -29,6 +29,7 @@ import {
   reviewProfileCompletenessQuery,
   reviewAdapterCandidatesQuery,
   reviewEnrichmentQueueQuery,
+  reviewEnrichmentTargetsQuery,
   subnetsQuery,
 } from "@/lib/metagraphed/queries";
 import { GITHUB_REPO } from "@/lib/metagraphed/config";
@@ -201,6 +202,19 @@ function GapsPage() {
             </Suspense>
           </QueryErrorBoundary>
         </PageSection>
+
+        <PageSection
+          id="enrichment-targets"
+          eyebrow="Targets"
+          title="Enrichment targets"
+          description="Contributor-ready targets grouped by missing surface kind, with the recommended next action per target."
+        >
+          <QueryErrorBoundary>
+            <Suspense fallback={<Skeleton className="h-32 w-full" />}>
+              <EnrichmentTargets />
+            </Suspense>
+          </QueryErrorBoundary>
+        </PageSection>
       </main>
 
       <ApiSourceFooter
@@ -209,6 +223,7 @@ function GapsPage() {
           "/api/v1/review/profile-completeness",
           "/api/v1/review/adapter-candidates",
           "/api/v1/review/enrichment-queue",
+          "/api/v1/review/enrichment-targets",
         ]}
       />
     </AppShell>
@@ -997,6 +1012,69 @@ function EnrichmentQueue() {
                 </td>
                 <td className="px-4 py-2.5 font-mono text-[11px]">{r.priority ?? "—"}</td>
                 <td className="px-4 py-2.5 text-[12px] text-ink-muted">{r.note ?? "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function EnrichmentTargets() {
+  const { data } = useSuspenseQuery(reviewEnrichmentTargetsQuery());
+  const meta = data.meta;
+  const rows = data.data ?? [];
+  if (rows.length === 0)
+    return (
+      <TableState
+        variant="empty"
+        title="No enrichment targets"
+        description="Nothing is currently flagged as a contributor-ready enrichment target."
+        cta={{ label: "Browse registry", href: "/subnets" }}
+        generatedAt={meta?.generated_at}
+      />
+    );
+  return (
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-surface-2/60 text-[10px] font-mono uppercase tracking-widest text-ink-muted">
+            <tr>
+              <th className="px-4 py-2.5 text-left">Netuid</th>
+              <th className="px-4 py-2.5 text-left">Name</th>
+              <th className="px-4 py-2.5 text-left">Target type</th>
+              <th className="px-4 py-2.5 text-left">Priority</th>
+              <th className="px-4 py-2.5 text-left">Missing / next action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {rows.map((r) => (
+              <tr key={r.id} className="mg-row-hover">
+                <td className="px-4 py-2.5 font-mono text-[11px]">
+                  {r.netuid != null ? (
+                    <Link
+                      to="/subnets/$netuid"
+                      params={{ netuid: r.netuid }}
+                      className="hover:text-accent"
+                    >
+                      SN{r.netuid}
+                    </Link>
+                  ) : (
+                    "—"
+                  )}
+                </td>
+                <td className="px-4 py-2.5 text-[13px] text-ink">{r.name ?? "—"}</td>
+                <td className="px-4 py-2.5 font-mono text-[11px] text-ink-muted">
+                  {r.target_type ?? "—"}
+                </td>
+                <td className="px-4 py-2.5 font-mono text-[11px]">{r.priority ?? "—"}</td>
+                <td className="px-4 py-2.5 text-[12px] text-ink-muted">
+                  {r.note ??
+                    (r.missing_kinds && r.missing_kinds.length > 0
+                      ? r.missing_kinds.join(", ")
+                      : "—")}
+                </td>
               </tr>
             ))}
           </tbody>

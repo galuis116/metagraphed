@@ -5526,6 +5526,37 @@ export const reviewEnrichmentQueueQuery = () =>
     staleTime: STALE_LONG,
   });
 
+export const reviewEnrichmentTargetsQuery = () =>
+  queryOptions({
+    queryKey: k("review-enrichment-targets"),
+    queryFn: async ({ signal }) => {
+      const res = await fetchList<Record<string, unknown>>(
+        "/api/v1/review/enrichment-targets",
+        "targets",
+        undefined,
+        signal,
+      );
+      // API rows: ReviewEnrichmentTarget { netuid, name, slug, target_id,
+      // target_type, target_action, priority_score, missing_kinds,
+      // recommended_action, contribution_prompt, ... }.
+      const rows = res.data.map((r) => ({
+        id: (r.target_id as string) ?? (r.slug as string) ?? String(r.netuid ?? ""),
+        netuid: r.netuid as number | undefined,
+        name: r.name as string | undefined,
+        target_type: r.target_type as string | undefined,
+        target_action: r.target_action as string | undefined,
+        priority:
+          typeof r.priority_score === "number"
+            ? String(Math.round(r.priority_score as number))
+            : undefined,
+        missing_kinds: stringArrayFromUnknown(r.missing_kinds),
+        note: (r.recommended_action as string) ?? (r.contribution_prompt as string),
+      }));
+      return { ...res, data: rows };
+    },
+    staleTime: STALE_LONG,
+  });
+
 function normalizeSchema(raw: unknown): SchemaInfo {
   if (!raw || typeof raw !== "object") return raw as SchemaInfo;
   const s = raw as Record<string, unknown>;
