@@ -47,6 +47,25 @@
         "https://github.com/synthdataco/synth-subnet/blob/main/README.md"
       ],
       "url": "https://api.synthdata.co/v2/leaderboard/latest"
+    },
+    {
+      "auth_required": false,
+      "authority": "community",
+      "id": "sn-50-synth-leaderboard-historical",
+      "kind": "data-artifact",
+      "name": "Synth leaderboard history",
+      "notes": "Public no-auth GET returning historical per-miner reward records over a date range (query params start_time/end_time/prompt_name), distinct from the already-registered /v2/leaderboard/latest snapshot. Documented in the subnet's own OpenAPI spec (already the registered schema_url) as \"Leaderboard - Leaderboard History V2\".",
+      "provider": "synth",
+      "public_safe": true,
+      "review": {
+        "state": "community-submitted",
+        "submitted_by": "galuis116"
+      },
+      "source_urls": [
+        "https://api.synthdata.co/swagger.json",
+        "https://github.com/synthdataco/synth-subnet/blob/main/README.md"
+      ],
+      "url": "https://api.synthdata.co/v2/leaderboard/historical?start_time=2026-07-06T00:00:00Z&end_time=2026-07-07T00:00:00Z&prompt_name=crypto-24h"
     }
   ]
 }
