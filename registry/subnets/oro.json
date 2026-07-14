@@ -298,6 +298,56 @@
         "https://oroagents.com/"
       ],
       "url": "https://api.oroagents.com/health/deep"
+    },
+    {
+      "auth_required": false,
+      "authority": "community",
+      "id": "sn-15-oro-public-top-history",
+      "kind": "subnet-api",
+      "name": "ORO public leaderboard history API",
+      "notes": "Public no-auth GET /v1/public/top/history on api.oroagents.com returning JSON time-series leaderboard history for the SN15 ORO ShoppingBench subnet (per evaluation suite: agent_version_id, agent_name, and score entries over time). Documented as GET /v1/public/top/history in the subnet's own registered OpenAPI spec; same host as the existing /v1/public/top and /v1/public/leaderboard surfaces. Distinct from those current-state endpoints — this returns historical ranking data. Verified 200 application/json, no auth, SS58-clean.",
+      "probe": {
+        "enabled": true,
+        "expect": "json",
+        "method": "GET",
+        "timeout_ms": 10000
+      },
+      "provider": "oro",
+      "public_safe": true,
+      "review": {
+        "state": "community-submitted",
+        "submitted_by": "ultrahighsuper"
+      },
+      "source_urls": [
+        "https://api.oroagents.com/openapi.json",
+        "https://oroagents.com/"
+      ],
+      "url": "https://api.oroagents.com/v1/public/top/history"
+    },
+    {
+      "auth_required": false,
+      "authority": "community",
+      "id": "sn-15-oro-public-inference-models",
+      "kind": "subnet-api",
+      "name": "ORO public inference models API",
+      "notes": "Public no-auth GET /v1/public/inference/models on api.oroagents.com returning the JSON list of TEE-hosted inference models the SN15 ORO subnet makes available to agents (e.g. DeepSeek, Qwen, GLM, Kimi, MiniMax, gpt-oss variants). Documented as GET /v1/public/inference/models in the subnet's own registered OpenAPI spec; same host as the existing public API surfaces. Verified 200 application/json, no auth, SS58-clean.",
+      "probe": {
+        "enabled": true,
+        "expect": "json",
+        "method": "GET",
+        "timeout_ms": 10000
+      },
+      "provider": "oro",
+      "public_safe": true,
+      "review": {
+        "state": "community-submitted",
+        "submitted_by": "ultrahighsuper"
+      },
+      "source_urls": [
+        "https://api.oroagents.com/openapi.json",
+        "https://oroagents.com/"
+      ],
+      "url": "https://api.oroagents.com/v1/public/inference/models"
     }
   ],
   "website_url": "https://oroagents.com/"
