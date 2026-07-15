@@ -30,6 +30,7 @@ import {
   PageHero,
   ViewModeToggle,
   ShareButton,
+  TimeAgo,
   Donut,
   DonutLegend,
   Sparkline,
@@ -387,8 +388,14 @@ function ProvidersGrid({ view }: { view: "grid" | "table" }) {
                     ) : null}
                   </div>
                   <div className="mt-2 flex items-center justify-between gap-2 font-mono text-[11px] text-ink-muted">
-                    <span>{f.kindLabel}</span>
-                    {host ? <span className="max-w-[20ch] truncate">{host}</span> : null}
+                    <span className="inline-flex min-w-0 items-center gap-2">
+                      <span className="shrink-0">{f.kindLabel}</span>
+                      {host ? <span className="max-w-[20ch] truncate">{host}</span> : null}
+                    </span>
+                    <TimeAgo
+                      at={typeof p.updated_at === "string" ? p.updated_at : undefined}
+                      className="shrink-0"
+                    />
                   </div>
                   <div className="mt-2 grid grid-cols-3 gap-2 border-t border-border/60 pt-2">
                     <ProviderCardStat label="Subnets" value={f.subnetsLabel} />
@@ -410,6 +417,7 @@ function ProvidersGrid({ view }: { view: "grid" | "table" }) {
                   <th className="px-3 py-2 text-right">Subnets</th>
                   <th className="px-3 py-2 text-right">Surfaces</th>
                   <th className="px-3 py-2 text-right">Endpoints</th>
+                  <th className="px-3 py-2 text-right">Updated</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -469,6 +477,9 @@ function ProvidersGrid({ view }: { view: "grid" | "table" }) {
                       </td>
                       <td className="px-3 py-2 text-right font-mono text-[11px] tabular-nums">
                         {c?.endpoints ?? 0}
+                      </td>
+                      <td className="px-3 py-2 text-right font-mono text-[11px] text-ink-muted">
+                        <TimeAgo at={typeof p.updated_at === "string" ? p.updated_at : undefined} />
                       </td>
                     </tr>
                   );
@@ -562,6 +573,10 @@ function ProvidersGrid({ view }: { view: "grid" | "table" }) {
                     {!webHost && !repoHost && !docsHost ? (
                       <span className="font-mono text-[10px]">no public links yet</span>
                     ) : null}
+                    <TimeAgo
+                      at={typeof p.updated_at === "string" ? p.updated_at : undefined}
+                      className="font-mono"
+                    />
                   </div>
                   <ProviderCountsRow counts={counts[p.slug]} />
                 </Link>
