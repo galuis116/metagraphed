@@ -103,6 +103,18 @@ describe("buildChainAxonRemovals", () => {
     assert.equal(data.intensity_distribution.count, 3);
   });
 
+  // #5579: limit floor is 0 (matching #2984's chain-weights fix), so limit: 0
+  // returns an empty leaderboard rather than a single row.
+  test("limit of 0 yields an empty leaderboard, not a single row", () => {
+    const data = buildChainAxonRemovals(SUBNETS, {
+      window: "7d",
+      limit: 0,
+      networkDistinct: NETWORK,
+    });
+    assert.equal(data.subnets.length, 0);
+    assert.equal(data.subnet_count, 3);
+  });
+
   test("limit above the max clamps; a non-numeric limit uses the default", () => {
     const big = buildChainAxonRemovals(SUBNETS, {
       window: "7d",

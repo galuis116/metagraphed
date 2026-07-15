@@ -92,6 +92,17 @@ describe("buildChainStakeMoves", () => {
     );
   });
 
+  // #5579: limit floor is 0 (matching #2984's chain-weights fix).
+  test("limit of 0 yields an empty leaderboard, not a single row", () => {
+    const data = buildChainStakeMoves(SUBNETS, {
+      window: "7d",
+      limit: 0,
+      networkDistinct: NETWORK,
+    });
+    assert.equal(data.subnets.length, 0);
+    assert.equal(data.subnet_count, 3);
+  });
+
   test("limit caps the leaderboard; distribution and count stay network-wide", () => {
     const data = buildChainStakeMoves(SUBNETS, {
       window: "7d",

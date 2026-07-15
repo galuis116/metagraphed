@@ -130,7 +130,7 @@ export function buildChainPrometheus(
   const list = Array.isArray(subnetRows) ? subnetRows : [];
   const flooredLimit = Math.floor(Number(limit));
   const normalizedLimit = Number.isFinite(flooredLimit)
-    ? Math.max(1, Math.min(flooredLimit, CHAIN_PROMETHEUS_LIMIT_MAX))
+    ? Math.max(0, Math.min(flooredLimit, CHAIN_PROMETHEUS_LIMIT_MAX))
     : CHAIN_PROMETHEUS_LIMIT_DEFAULT;
   const observedAt = toIso(networkDistinct?.newest_observed);
 
