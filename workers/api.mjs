@@ -29,6 +29,7 @@ import {
   logEvent,
   readArtifact,
   readHealthKv,
+  readR2Object,
 } from "./storage.mjs";
 import {
   contractStaleness,
@@ -1469,10 +1470,16 @@ export async function handleRequest(request, env = {}, ctx = {}) {
   }
 
   // Dynamic Open Graph card (/og.png, alias /og) for the landing page's
-  // link-unfurl. Worker-computed PNG with live registry counts; workers-og's
-  // wasm is lazy-loaded inside the handler so this never weighs on other routes.
+  // link-unfurl. Rendered at publish time (scripts/refresh-og-image.mjs,
+  // Node context) and stored in R2 like every other artifact -- the live
+  // route here is just a binary R2 read, never a satori/resvg render (#6502:
+  // the workers-og wasm cost ~545 KiB gzipped and pushed this Worker's own
+  // bundle over Cloudflare's deploy ceiling once @sentry/cloudflare was
+  // added; the fix was to stop shipping workers-og in any live Worker at
+  // all, not to relocate the render into a second Worker). See
+  // src/og-image.mjs's own header for the full rationale.
   if (url.pathname === "/og.png" || url.pathname === "/og") {
-    return handleOgImage(request, env, url, { readArtifact });
+    return handleOgImage(request, env, url, { readR2Object });
   }
 
   // Brand-icon favicon proxy (binary, not a JSON contract route). Implements the
