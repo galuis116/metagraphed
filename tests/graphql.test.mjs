@@ -10670,14 +10670,11 @@ describe("graphql — health_trends (#5722, Postgres-tier + D1-live fallback)", 
     // Relative to Date.now(), not a hardcoded literal -- a fixed past date
     // drifts outside the resolver's real "7d" window as wall-clock time
     // moves on, making this fail independent of any code change once it
-    // does (it just did: the literal was "2026-07-09", fixed for real in
-    // #6319 against main). loadBulkHealthTrends (src/bulk-health-trends.mjs)
-    // computes the window cutoff from the real Date.now() by default, so the
-    // fixture must track it the same way
+    // does (it just did: the literal was "2026-07-09"). loadBulkHealthTrends
+    // (src/bulk-health-trends.mjs) computes the window cutoff from the real
+    // Date.now() by default, so the fixture must track it the same way
     // tests/request-handlers-analytics.test.mjs's `recentDay` already does
-    // for the identical surface_uptime_daily shape. Carried here too so this
-    // PR's own CI isn't blocked waiting on #6319 to merge separately --
-    // collapses to a no-op once this branch rebases onto that fix.
+    // for the identical surface_uptime_daily shape.
     const recentDay = new Date(Date.now() - 2 * DAY_MS)
       .toISOString()
       .slice(0, 10);
