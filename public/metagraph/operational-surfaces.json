@@ -10,7 +10,7 @@
     "subtensor-wss"
   ],
   "schema_version": 1,
-  "surface_count": 556,
+  "surface_count": 560,
   "surfaces": [
     {
       "auth_required": false,
@@ -1109,6 +1109,78 @@
       "surface_id": "sn-14-cacheon-evaluations",
       "surface_key": "srf-5506db2217bf5152",
       "url": "https://api.cacheon.ai/api/evaluations"
+    },
+    {
+      "auth_required": false,
+      "authority": "community",
+      "kind": "subnet-api",
+      "netuid": 14,
+      "probe": {
+        "expect": "json",
+        "method": "GET",
+        "timeout_ms": 10000
+      },
+      "provider": "cacheon",
+      "public_safe": true,
+      "subnet_name": "Cacheon",
+      "subnet_slug": "cacheon",
+      "surface_id": "sn-14-cacheon-health",
+      "surface_key": "srf-bfcc4c160758ccb1",
+      "url": "https://api.cacheon.ai/api/health"
+    },
+    {
+      "auth_required": false,
+      "authority": "community",
+      "kind": "subnet-api",
+      "netuid": 14,
+      "probe": {
+        "expect": "json",
+        "method": "GET",
+        "timeout_ms": 10000
+      },
+      "provider": "cacheon",
+      "public_safe": true,
+      "subnet_name": "Cacheon",
+      "subnet_slug": "cacheon",
+      "surface_id": "sn-14-cacheon-leader-api",
+      "surface_key": "srf-8e43d75a57d61619",
+      "url": "https://api.cacheon.ai/api/leader"
+    },
+    {
+      "auth_required": false,
+      "authority": "community",
+      "kind": "subnet-api",
+      "netuid": 14,
+      "probe": {
+        "expect": "json",
+        "method": "GET",
+        "timeout_ms": 10000
+      },
+      "provider": "cacheon",
+      "public_safe": true,
+      "subnet_name": "Cacheon",
+      "subnet_slug": "cacheon",
+      "surface_id": "sn-14-cacheon-leader-history-api",
+      "surface_key": "srf-0e0c91c57f03d2b6",
+      "url": "https://api.cacheon.ai/api/leader/history"
+    },
+    {
+      "auth_required": false,
+      "authority": "community",
+      "kind": "subnet-api",
+      "netuid": 14,
+      "probe": {
+        "expect": "json",
+        "method": "GET",
+        "timeout_ms": 10000
+      },
+      "provider": "cacheon",
+      "public_safe": true,
+      "subnet_name": "Cacheon",
+      "subnet_slug": "cacheon",
+      "surface_id": "sn-14-cacheon-rounds-api",
+      "surface_key": "srf-8d280b6d432a0f12",
+      "url": "https://api.cacheon.ai/api/rounds"
     },
     {
       "auth_required": false,
