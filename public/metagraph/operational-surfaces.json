@@ -10,7 +10,7 @@
     "subtensor-wss"
   ],
   "schema_version": 1,
-  "surface_count": 556,
+  "surface_count": 557,
   "surfaces": [
     {
       "auth_required": false,
@@ -191,6 +191,24 @@
       "surface_id": "opentensor-lite-wss",
       "surface_key": "srf-dcf48d017826dc4b",
       "url": "wss://lite.chain.opentensor.ai:443"
+    },
+    {
+      "auth_required": false,
+      "authority": "community",
+      "kind": "subnet-api",
+      "netuid": 1,
+      "probe": {
+        "expect": "json",
+        "method": "GET",
+        "timeout_ms": 10000
+      },
+      "provider": "macrocosmos",
+      "public_safe": true,
+      "subnet_name": "Apex",
+      "subnet_slug": "sn-1",
+      "surface_id": "sn-1-apex-healthcheck",
+      "surface_key": "srf-07941863062c55b5",
+      "url": "https://apex.api.macrocosmos.ai/healthcheck"
     },
     {
       "auth_required": false,
