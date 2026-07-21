@@ -68,7 +68,13 @@
       "id": "sn-82-compelle-health",
       "kind": "subnet-api",
       "name": "Compelle aggregation health",
-      "notes": "Public no-auth GET /api/health on compelle.com returning aggregation-service liveness JSON (observed: {\"ok\":true,\"db_size_bytes\":...,\"games\":...,\"miners\":...}). Served on the official Compelle SN82 debate arena host linked from the validator repository.",
+      "notes": "Public no-auth GET /api/health on compelle.com returning aggregation-service liveness JSON (observed: {\"ok\":true,\"db_size_bytes\":...,\"games\":...,\"miners\":...}). Served on the official Compelle SN82 debate arena host linked from the validator repository. Live-verified 2026-07-21: GET returns 200 application/json {\"ok\":true,\"db_size_bytes\":6893121536,\"last_epoch_block\":8668714,\"games\":238628,\"miners\":858}.",
+      "probe": {
+        "enabled": true,
+        "expect": "json",
+        "method": "GET",
+        "timeout_ms": 10000
+      },
       "provider": "compelle",
       "public_safe": true,
       "review": {
