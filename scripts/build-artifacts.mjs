@@ -8,10 +8,7 @@ import {
   rollupSubnetStatus,
 } from "../src/health-probe-core.ts";
 import { generateServiceSnippets } from "../src/integration-snippets.ts";
-import {
-  githubSignalsForSubnet,
-  loadGithubSignals,
-} from "./github-signals.mjs";
+import { githubSignalsForSubnet, loadGithubSignals } from "./github-signals.ts";
 import {
   backfilledIdentityUrl,
   socialAccounts,
@@ -88,8 +85,8 @@ import {
   MCP_REGISTRY_META,
   listToolDefinitions,
 } from "../src/mcp-server.mjs";
-import { buildDatasetExports } from "./datasets.mjs";
-import { buildChangelog } from "./changelog.mjs";
+import { buildDatasetExports } from "./datasets.ts";
+import { buildChangelog } from "./changelog.ts";
 import {
   buildSurfaceAliasArtifact,
   SURFACE_ALIASES_RELATIVE_PATH,
@@ -97,8 +94,8 @@ import {
 import {
   evaluateArtifactBudgets,
   summarizeArtifactBudgets,
-} from "./artifact-budgets.mjs";
-import { buildCanonicalOpenApiArtifact } from "./openapi-components.mjs";
+} from "./artifact-budgets.ts";
+import { buildCanonicalOpenApiArtifact } from "./openapi-components.ts";
 import {
   R2_STAGING_RELATIVE_ROOT,
   artifactStorageTierForRelativePath,
@@ -173,7 +170,7 @@ const reviewDecisions = await loadReviewDecisions();
 const nativeSnapshot = await loadNativeSnapshot();
 // #6639: per-subnet GitHub language + last-push signal, from the committed
 // registry/generated/github-signals.json (periodically maintainer-refreshed
-// via `node scripts/github-signals.mjs --write`, mirrors how verification/
+// via `node scripts/github-signals.ts --write`, mirrors how verification/
 // candidates are loaded above -- a cold/absent file degrades every subnet's
 // github_languages/github_last_push_at to null, never throws).
 const githubSignals = await loadGithubSignals();
@@ -2523,7 +2520,7 @@ const currentArtifactDigests = await collectArtifactDigests({
 // subnets/coverage are R2-only (#1003), so there is no committed baseline at
 // build time — previousSubnets/previousCoverage resolve to null and this emits
 // an EMPTY placeholder changelog. The real "since last publish" diff is computed
-// by scripts/build-changelog.mjs at publish time against the previous R2 publish.
+// by scripts/build-changelog.ts at publish time against the previous R2 publish.
 const changelogArtifact = buildChangelog({
   contractVersion,
   currentArtifacts: currentArtifactDigests,

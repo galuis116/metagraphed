@@ -1181,7 +1181,7 @@ async function internalSyncRateLimited(request, env) {
 // isn't opening the endpoint to anonymous abuse, just no longer rate-limiting
 // the one legitimate caller into a permanent failure loop. The relay's own
 // forwardWithRetry now also properly respects retry-after and pauses its
-// whole poll loop on a 429 (scripts/chain-firehose-relay.mjs), so a real
+// whole poll loop on a 429 (scripts/chain-firehose-relay.ts), so a real
 // spike still degrades gracefully instead of repeating this failure mode.
 const CHAIN_FIREHOSE_INGEST_RATE_LIMIT = { limit: 1200, windowSeconds: 60 };
 
@@ -4424,7 +4424,7 @@ async function handleHealthRequest(request, env) {
 // --- Change-feed webhooks -----------------------------------------------------
 // Subscription management for the data publish change feed. Subscriptions live in
 // the METAGRAPH_CONTROL KV namespace under the `webhooks:sub:<id>` prefix; the
-// publish-time dispatcher (scripts/dispatch-webhooks.mjs) reads them and fires
+// publish-time dispatcher (scripts/dispatch-webhooks.ts) reads them and fires
 // HMAC-signed POSTs. Routes degrade to 503 when KV is unbound (local dev).
 async function handleWebhookRequest(request, env, url) {
   if (!env.METAGRAPH_CONTROL?.get || !env.METAGRAPH_CONTROL?.put) {

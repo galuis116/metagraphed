@@ -29,7 +29,7 @@ export const generatedSourceRoot = path.join(repoRoot, "dist/metagraph-source");
 // reflect the last real publish, not a local/CI build, so they are EXPECTED
 // to drift on every `npm run build` for reasons unrelated to any given PR.
 // Single source of truth, consumed by build.mjs (post-build local warning)
-// and ci-verify-submitted-artifacts.mjs (submitted-artifact mismatch
+// and ci-verify-submitted-artifacts.ts (submitted-artifact mismatch
 // messaging) so both stay in sync.
 export const DEPLOY_OWNED_ARTIFACTS = [
   "public/metagraph/r2-manifest.json",
@@ -41,7 +41,7 @@ export const DEPLOY_OWNED_ARTIFACTS = [
 // stale relative to it. A direct clone of the canonical repo has no
 // `upstream` remote at all, so `origin` there IS canonical. Prefer `upstream`
 // when present. Single source of truth for build.mjs's local warning and
-// ci-verify-submitted-artifacts.mjs's remediation message, so both always
+// ci-verify-submitted-artifacts.ts's remediation message, so both always
 // recommend the same, correct remote.
 export function resolveBaseRemote(cwd = process.cwd()) {
   const result = spawnSync("git", ["remote"], { cwd, encoding: "utf8" });
@@ -196,14 +196,14 @@ export function netuidFromEvidenceSubject(subject) {
  * Read a CLI flag's value, accepting both `--flag=value` and `--flag value`.
  *
  * `scripts/` grew both conventions independently: some parsers match `--flag=`
- * only (r2-download.mjs), while others take the next argv entry (subnet-new.mjs,
- * curation-brief.mjs, and endpoint-ops-brief.mjs's own `valueAfter`). A parser
+ * only (r2-download.ts), while others take the next argv entry (subnet-new.mjs,
+ * curation-brief.ts, and endpoint-ops-brief.ts's own `valueAfter`). A parser
  * that accepts only one form silently ignores the other -- no error, no warning,
  * the flag is simply dropped and the default applies instead. That is exactly
- * how endpoint-ops-brief.mjs came to document `--prefix latest/` for a script
+ * how endpoint-ops-brief.ts came to document `--prefix latest/` for a script
  * that only reads `--prefix=` (#6365).
  *
- * Accepting both is what enrichment-issues.mjs's `getOpt` already does; this is
+ * Accepting both is what enrichment-issues.ts's `getOpt` already does; this is
  * that behaviour, shared and unit-tested.
  *
  * A following token starting with `--` is treated as the next flag rather than
@@ -250,7 +250,7 @@ export function assertNoSubnetFilePathCollision({
 // Merges the full generated overlay set with the manually-curated
 // registry/subnets/*.json files, keyed by netuid — the manual file wins where
 // one exists, otherwise the generated overlay materializes to the slug-derived
-// path a fresh `subnet:new` would use. Pulled out of scripts/promote-reviewed.mjs
+// path a fresh `subnet:new` would use. Pulled out of scripts/promote-reviewed.ts
 // so it's exercised in-process by its own unit tests rather than only via that
 // script's execFileSync entrypoint (which the coverage collector can't see).
 export function buildSubnetOverlaysByNetuid({
@@ -613,7 +613,7 @@ export async function loadEntities() {
 
 export async function loadSubnets() {
   const { generateBaselineOverlaySet, loadManualSubnetOverlays } =
-    await import("./generated-overlays.mjs");
+    await import("./generated-overlays.ts");
   const manualOverlays = await loadManualSubnetOverlays();
   const overlaySet = await generateBaselineOverlaySet({
     manualOverlays,
@@ -885,7 +885,7 @@ export const REGISTRY_SYNC_MAX_BODY_BYTES = 3_500_000;
 export const REGISTRY_SYNC_MAX_ROWS_PER_KIND = 2_000;
 
 // Shared POST client for scripts/sync-registry-to-postgres.mjs (merge-
-// triggered) and scripts/backfill-registry-postgres.mjs (scheduled full
+// triggered) and scripts/backfill-registry-postgres.ts (scheduled full
 // resync) -- both send {providers, subnets, surfaces} row arrays to the
 // registry-sync Worker over HTTPS instead of touching Postgres directly (see
 // workers/registry-sync-api.mjs). Returns null when REGISTRY_SYNC_SECRET

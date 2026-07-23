@@ -1,8 +1,8 @@
 import { spawnSync } from "node:child_process";
 import path from "node:path";
-import { buildApiComponentBundle } from "./bundle-schemas.mjs";
-import { generateClientSource } from "./generate-client.mjs";
-import { buildCanonicalOpenApiArtifact } from "./openapi-components.mjs";
+import { buildApiComponentBundle } from "./bundle-schemas.ts";
+import { generateClientSource } from "./generate-client.ts";
+import { buildCanonicalOpenApiArtifact } from "./openapi-components.ts";
 import { readJson, repoRoot, stableStringify } from "./lib.mjs";
 import { promises as fs } from "node:fs";
 
@@ -45,7 +45,7 @@ const typegen = spawnSync(
     encoding: "utf8",
     // The generated .d.ts is ~1 MiB and grows with every route; the default 1 MiB
     // stdout cap would SIGTERM the child (ENOBUFS) and misreport it as a drift
-    // failure. Match the 32 MiB buffer the build's generate-types.mjs uses.
+    // failure. Match the 32 MiB buffer the build's generate-types.ts uses.
     maxBuffer: 32 * 1024 * 1024,
   },
 );

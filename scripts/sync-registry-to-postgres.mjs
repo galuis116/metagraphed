@@ -2,7 +2,7 @@
 // registry/providers/*.json files that changed in a push into the registry
 // Postgres instance, within seconds/minutes of a merge rather than waiting
 // for the next scheduled full resync. Its sibling,
-// scripts/backfill-registry-postgres.mjs, run on a schedule, is what keeps
+// scripts/backfill-registry-postgres.ts, run on a schedule, is what keeps
 // the machine-discovered half of the same tables (subnets with no manual
 // file, candidate-promoted surfaces) fresh on ITS OWN cadence — that content
 // isn't tied to a git commit the way this script's trigger is. Together they
@@ -49,7 +49,7 @@ import {
   subnetSurfaceKey,
 } from "./lib.mjs";
 import { OPERATIONAL_SURFACE_KINDS } from "../src/health-probe-core.ts";
-import { initSentry, endSessionAndFlush } from "./observability.mjs";
+import { initSentry, endSessionAndFlush } from "./observability.ts";
 
 initSentry("sync-registry-to-postgres");
 

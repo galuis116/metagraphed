@@ -9,7 +9,7 @@ import {
   ARTIFACT_SIZE_BUDGETS,
   evaluateArtifactBudgets,
   summarizeArtifactBudgets,
-} from "../scripts/artifact-budgets.mjs";
+} from "../scripts/artifact-budgets.ts";
 import {
   buildEndpointResourceArtifact,
   buildEndpointPoolArtifact,
@@ -77,15 +77,15 @@ import {
   isR2PreferredDualArtifactPath,
   schemaDetailArtifactRelativePath,
 } from "../src/artifact-storage.ts";
-import { buildCanonicalOpenApiArtifact } from "../scripts/openapi-components.mjs";
-import { renderCurationBrief } from "../scripts/curation-brief.mjs";
+import { buildCanonicalOpenApiArtifact } from "../scripts/openapi-components.ts";
+import { renderCurationBrief } from "../scripts/curation-brief.ts";
 import {
   MissingEndpointArtifactsError,
   missingEndpointArtifactDetails,
   renderEndpointOpsBrief,
-} from "../scripts/endpoint-ops-brief.mjs";
-import { generateBaselineOverlaySet } from "../scripts/generated-overlays.mjs";
-import { classifyHttpProbe } from "../scripts/http-probe-classification.mjs";
+} from "../scripts/endpoint-ops-brief.ts";
+import { generateBaselineOverlaySet } from "../scripts/generated-overlays.ts";
+import { classifyHttpProbe } from "../scripts/http-probe-classification.ts";
 import {
   optionalHttpStatus,
   preservePreviousGithubMetadata,
@@ -462,7 +462,7 @@ describe("script utility contracts", () => {
 
   test("refresh pipeline persists candidate discovery timestamps", async () => {
     const source = await readFile(
-      path.join(repoRoot, "scripts/pipeline.mjs"),
+      path.join(repoRoot, "scripts/pipeline.ts"),
       "utf8",
     );
 

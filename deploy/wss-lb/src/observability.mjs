@@ -13,15 +13,15 @@ import * as Sentry from "@sentry/node";
 
 // Release-health session tracking (Crash Free Sessions/Users), process-
 // lifetime model: this is an always-on server, not a one-shot batch script
-// (contrast the canonical metagraphed repo's scripts/observability.mjs,
+// (contrast the canonical metagraphed repo's scripts/observability.ts,
 // which sessions per script run) -- one session per process boot, closed
 // healthy on graceful SIGTERM/SIGINT shutdown (see server.mjs's own
 // shutdown handler) or marked crashed here on a genuinely uncaught
 // exception. @sentry/node's default OnUncaughtException/OnUnhandledRejection
 // integrations don't mark the active session crashed before exiting
 // (confirmed by reading node_modules/@sentry/node-core's actual source --
-// same finding scripts/observability.mjs's own header documents), and unlike
-// scripts/chain-firehose-relay.mjs this server has no single top-level
+// same finding scripts/observability.ts's own header documents), and unlike
+// scripts/chain-firehose-relay.ts this server has no single top-level
 // main().catch() boundary every crash funnels through (any of its event
 // handlers -- the HTTP server, the WS upgrade handler, the refresh/heartbeat
 // intervals -- could throw directly to the process level), so this module
@@ -103,14 +103,14 @@ export async function endSessionAndFlush() {
 export const NO_UPSTREAM_REPORT_THRESHOLD = 50;
 export const NO_UPSTREAM_REPORT_INTERVAL_MS = 5 * 60 * 1000;
 
-// Pure state-transition function -- same design as chain-firehose-relay.mjs's
+// Pure state-transition function -- same design as chain-firehose-relay.ts's
 // computeDropWindowUpdate, for the same reason: a client-connect storm during
 // a real upstream-pool outage could reject many clients per second (every
 // concurrent reconnect attempt), and naive per-rejection capture would blow
 // through the free-tier Sentry event quota and then be silently sampled away
 // by Sentry itself -- the opposite of the point. Holds no module-level
 // mutable state itself; the caller (server.mjs) owns the actual window
-// variable, the same split chain-firehose-relay.mjs's own comment explains.
+// variable, the same split chain-firehose-relay.ts's own comment explains.
 export function computeNoUpstreamWindowUpdate(
   window,
   network,

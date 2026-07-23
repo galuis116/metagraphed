@@ -389,7 +389,7 @@ SDK` commit, so a hand-bump here is redundant at best and a conflicting version 
   instead of reaching for app infrastructure — that's the exact regression this package's extraction
   exists to prevent.
 - **`packages/contract` is a types-only npm workspace (#3067) holding the OpenAPI-derived contract
-  types** — `openapi-typescript`'s output (`scripts/generate-types.mjs`/`validate-types.mjs`/
+  types** — `openapi-typescript`'s output (`scripts/generate-types.ts`/`validate-types.mjs`/
   `validate-contract-drift.mjs` all write/check `packages/contract/index.d.ts` now, no longer
   `generated/metagraphed-api.d.ts`, which no longer exists). `packages/client` depends on it as a
   real `devDependency` (`"metagraphed-contract": "*"`) and imports `type { components, paths } from
@@ -455,7 +455,7 @@ api-reference/**` wasn't regenerated — run `node scripts/generate-openapi-docs
   `npm run build` fully populates R2 staging (per ADR-0001) and rewrites both to reflect that local/CI
   build, but their committed copies on `main` reflect the last real deploy/publish — not a local build —
   for reasons unrelated to your change: `r2-manifest.json` is publish infrastructure read from its
-  committed path by `scripts/kv-publish-pointer.mjs` / `scripts/cloudflare-verify.mjs` /
+  committed path by `scripts/kv-publish-pointer.ts` / `scripts/cloudflare-verify.mjs` /
   `scripts/sync-summary.mjs` during the actual publish, and its `*_artifact_size_bytes` totals are
   inherently non-deterministic build-to-build; `schemas/index.json` is a network-capture cache the build
   "reconciles in place". Both are explicitly excluded from the derived-artifact freshness gate in

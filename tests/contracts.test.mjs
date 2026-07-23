@@ -17,8 +17,8 @@ import {
   compileRoutePattern,
 } from "../src/contracts.mjs";
 import { RETIRED_CURRENT_HEALTH_ARTIFACT_PATTERN } from "../workers/config.ts";
-import { evaluateArtifactBudgets } from "../scripts/artifact-budgets.mjs";
-import { loadOpenApiComponentSchemas } from "../scripts/openapi-components.mjs";
+import { evaluateArtifactBudgets } from "../scripts/artifact-budgets.ts";
+import { loadOpenApiComponentSchemas } from "../scripts/openapi-components.ts";
 
 describe("artifact lifecycle status (#6358)", () => {
   // The catalog advertised health-latest/health-summary/health-subnet as
