@@ -1,6 +1,6 @@
 // Tolerant candidate-discovery + verification refresh for the PRODUCTION publish
 // (issue #599 / ADR 0006). candidate-discovery and candidate-verification are
-// block-behavior freshness sources (validate.mjs validateFreshnessForPublish):
+// block-behavior freshness sources (validate.ts validateFreshnessForPublish):
 // once either is >24h old the scheduled publish HARD-FAILS. #571 retired the
 // scheduled sync-subnets PR that used to refresh them, so without this the
 // event-driven + daily-floor publish starts failing ~24h after the last manual sync.
@@ -30,12 +30,12 @@ const env = {
 
 const steps: [string, string[]][] = [
   ["discover-candidates", ["scripts/discover-candidates.ts", "--write"]],
-  ["verify-candidates", ["scripts/verify-candidates.mjs", "--write"]],
+  ["verify-candidates", ["scripts/verify-candidates.ts", "--write"]],
   // The provenance review queue is a pure transform of the candidates +
   // verification just refreshed above; regenerate it in lockstep so the publish's
   // `npm run validate` (which drift-checks the committed queue) sees a consistent
   // state instead of failing whenever discovery finds something new.
-  ["review-queue", ["scripts/review-queue.mjs", "--write"]],
+  ["review-queue", ["scripts/review-queue.ts", "--write"]],
 ];
 
 for (const [label, args] of steps) {

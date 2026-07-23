@@ -61,7 +61,7 @@ subnets and demonstrate the product to the broader ecosystem.
    `registry/adapters/latest/gittensor.json` currently shows `Bad credentials`
    (401), all 18 repos at `html-fallback` with `null` `pushed_at`/`open_issues_count`,
    and `captured_count: 0` — committed from a local, tokenless, epoch-stamped run.
-   The snapshot code is already hardened: `scripts/snapshot-adapters.mjs` reads
+   The snapshot code is already hardened: `scripts/snapshot-adapters.ts` reads
    `GITHUB_TOKEN`/`GH_TOKEN`, warns and carries forward on 401, and honors
    `METAGRAPH_REQUIRE_ADAPTER_AUTH=1` to fail closed — and `sync-subnets.yml`
    already sets that guard and passes the token. Remaining work is **operational**:
@@ -70,7 +70,7 @@ subnets and demonstrate the product to the broader ecosystem.
    adapters; it publishes whatever is committed, so a guard there (or a validator
    that rejects an all-`html-fallback` adapter) is the optional belt-and-suspenders.
    _Update:_ that validator now exists — `npm run validate:adapters`
-   (`scripts/validate-adapters.mjs`) flags broken-auth / all-`html-fallback`
+   (`scripts/validate-adapters.ts`) flags broken-auth / all-`html-fallback`
    adapters; it warns on ordinary PRs and fails closed under
    `METAGRAPH_PRODUCTION_BUILD` / `METAGRAPH_REQUIRE_ADAPTER_AUTH`, and is wired
    into the `publish-cloudflare.yml` refresh job and `sync-subnets.yml` so degraded

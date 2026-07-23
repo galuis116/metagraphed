@@ -1115,12 +1115,10 @@ function stripRefreshFailureNote(value: unknown): string {
 
 function displayNameForNetuid(netuid: number): string {
   const nativeSubnet = nativeByNetuid.get(netuid);
-  // nativeDisplayName's fallback param is inferred as `null | undefined` from
-  // its untyped scripts/lib/formatting.mjs default value (`= null`), not
-  // `string` -- cast until Phase 4 batch 7 converts that file.
-  return (
-    nativeDisplayName as (subnet: Row | undefined, fallback?: string) => string
-  )(nativeSubnet, overlayNameByNetuid.get(netuid) || `Subnet ${netuid}`);
+  return nativeDisplayName(
+    nativeSubnet,
+    overlayNameByNetuid.get(netuid) || `Subnet ${netuid}`,
+  );
 }
 
 function githubSurfaceKind(urlValue: string): string {
@@ -1229,8 +1227,8 @@ function extractUrls(value: unknown): string[] {
 }
 
 // Canonical URL normalization lives in scripts/lib.ts (normalizePublicUrl) and
-// is shared with the contributor-facing path (validate-surface.mjs /
-// surface-add.mjs) so protocol/credential/SSRF/impersonation handling can never
+// is shared with the contributor-facing path (validate-surface.ts /
+// surface-add.ts) so protocol/credential/SSRF/impersonation handling can never
 // diverge by call site (#5991). Discovery layers on one extra rejection: the
 // placeholder/template identity URLs (example.com, github.com/username/repo,
 // deprecated + "your*" README stubs) that clear those guards but must never

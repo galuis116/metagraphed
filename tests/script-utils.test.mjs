@@ -89,11 +89,11 @@ import { classifyHttpProbe } from "../scripts/http-probe-classification.ts";
 import {
   optionalHttpStatus,
   preservePreviousGithubMetadata,
-} from "../scripts/verification-quality.mjs";
+} from "../scripts/verification-quality.ts";
 import {
   summarizeGithubMetadata,
   summarizeGittensorMaster,
-} from "../scripts/snapshot-adapters.mjs";
+} from "../scripts/snapshot-adapters.ts";
 
 describe("script utility contracts", () => {
   test("uses public-safe fixture capture parse failure reasons", () => {
@@ -632,7 +632,7 @@ describe("script utility contracts", () => {
   test("native subnet sync reports missing uvx without masking the error", () => {
     const result = spawnSync(
       process.execPath,
-      ["scripts/sync-subnets.mjs", "--dry-run"],
+      ["scripts/sync-subnets.ts", "--dry-run"],
       {
         cwd: repoRoot,
         encoding: "utf8",
@@ -2631,7 +2631,7 @@ test("validate:intake rejects nested retired community candidate files", async (
   await mkdir(retiredDir, { recursive: true });
   try {
     await writeFile(retiredFile, "{}\n");
-    const result = spawnSync("node", ["scripts/validate-intake.mjs"], {
+    const result = spawnSync("node", ["scripts/validate-intake.ts"], {
       cwd: repoRoot,
       encoding: "utf8",
     });

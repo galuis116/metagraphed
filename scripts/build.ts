@@ -161,7 +161,7 @@ function productionSteps(): Step[] {
     // step 2) so the registry stays current without the retired scheduled
     // sync-subnets PR. Tolerant: a chain RPC failure keeps the last snapshot and
     // the publish proceeds — it never blocks on the chain being reachable.
-    nodeStep("native-snapshot", "scripts/refresh-native-snapshot.mjs"),
+    nodeStep("native-snapshot", "scripts/refresh-native-snapshot.ts"),
     // Refresh candidate discovery + verification fresh each publish (issue #599)
     // so their >24h block-freshness gate doesn't hard-fail the scheduled publish
     // now that the sync PR is retired (#571). Runs AFTER native-snapshot
@@ -173,7 +173,7 @@ function productionSteps(): Step[] {
     // get_api_schema. build-artifacts grabs the document before its staging wipe
     // and re-attaches it; the index stays light. Degrades to digests if a spec
     // is unreachable (snapshot-openapi handles unavailable surfaces).
-    nodeStep("schemas-snapshot", "scripts/snapshot-openapi.mjs", "--write"),
+    nodeStep("schemas-snapshot", "scripts/snapshot-openapi.ts", "--write"),
     // Re-snapshot adapters from live GitHub metadata so the publish is
     // self-sufficient for freshness: adapter-snapshots are then fresh by
     // construction at publish time (the publish already re-probes health),
@@ -181,7 +181,7 @@ function productionSteps(): Step[] {
     // Auth posture (METAGRAPH_REQUIRE_ADAPTER_AUTH) + token are supplied by
     // the caller (publish-cloudflare.yml); without a token this carries
     // forward committed adapter data rather than failing.
-    nodeStep("adapters-snapshot", "scripts/snapshot-adapters.mjs", "--write"),
+    nodeStep("adapters-snapshot", "scripts/snapshot-adapters.ts", "--write"),
     // Capture one sanitized live request/response sample per no-auth GET
     // surface (issue #352) before build-artifacts, mirroring schemas-snapshot:
     // build-artifacts grabs the fixtures/{surface_id}.json files before its
@@ -211,7 +211,7 @@ function productionSteps(): Step[] {
     // tree, so r2-manifest below picks it up like any other artifact (#6502).
     // Tolerant like native-snapshot/refresh-candidates -- never fails the
     // build; see that script's own header.
-    nodeStep("refresh-og-image", "scripts/refresh-og-image.mjs"),
+    nodeStep("refresh-og-image", "scripts/refresh-og-image.ts"),
     nodeStep("r2-manifest", "scripts/r2-manifest.ts", "--write"),
   ];
 }

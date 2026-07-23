@@ -14,7 +14,7 @@ import {
   artifactStorageTierForRelativePath,
 } from "../src/artifact-storage.ts";
 import { entityLabelsIndex } from "../src/entity-labels.ts";
-import { sanitizeChainText, slugify } from "./lib/formatting.mjs";
+import { sanitizeChainText, slugify } from "./lib/formatting.ts";
 
 type Row = Record<string, unknown>;
 
@@ -208,7 +208,7 @@ export function netuidFromEvidenceSubject(subject: unknown): number | null {
  * Read a CLI flag's value, accepting both `--flag=value` and `--flag value`.
  *
  * `scripts/` grew both conventions independently: some parsers match `--flag=`
- * only (r2-download.ts), while others take the next argv entry (subnet-new.mjs,
+ * only (r2-download.ts), while others take the next argv entry (subnet-new.ts,
  * curation-brief.ts, and endpoint-ops-brief.ts's own `valueAfter`). A parser
  * that accepts only one form silently ignores the other -- no error, no warning,
  * the flag is simply dropped and the default applies instead. That is exactly
@@ -312,7 +312,7 @@ export function buildSubnetOverlaysByNetuid({
       const materializedFilePath = path.join(
         root,
         "registry/subnets",
-        // Same convention as scripts/subnet-new.mjs: slug the display name, not
+        // Same convention as scripts/subnet-new.ts: slug the display name, not
         // the internal sn-<netuid> slug field (which would just echo back
         // sn-<netuid> as the FILENAME too, reintroducing the drift this fixes).
         `${slugify(overlay.name) || `sn-${overlay.netuid}`}.json`,
@@ -966,7 +966,7 @@ export const REGISTRY_SYNC_DEFAULT_URL =
 export const REGISTRY_SYNC_MAX_BODY_BYTES = 3_500_000;
 export const REGISTRY_SYNC_MAX_ROWS_PER_KIND = 2_000;
 
-// Shared POST client for scripts/sync-registry-to-postgres.mjs (merge-
+// Shared POST client for scripts/sync-registry-to-postgres.ts (merge-
 // triggered) and scripts/backfill-registry-postgres.ts (scheduled full
 // resync) -- both send {providers, subnets, surfaces} row arrays to the
 // registry-sync Worker over HTTPS instead of touching Postgres directly (see
@@ -1028,7 +1028,7 @@ const schemaDroppedContentKeys = new Set([
 ]);
 const schemaAbsoluteUrlPattern = /\b(?:https?|wss?):\/\/[^\s<>"'`)}\]]+/gi;
 // Local absolute filesystem paths, scheme-less so distinct from the URL
-// pattern above. Mirrors scan-public-safety.mjs's "local absolute path" hard
+// pattern above. Mirrors scan-public-safety.ts's "local absolute path" hard
 // pattern, which has no soft-content exemption for mirrored/captured fixture
 // bodies by design (a real leak shape, not terminology) -- a live-captured
 // third-party response can echo one back regardless (e.g. a genomics
@@ -1617,7 +1617,7 @@ export function normalizePublicUrl(value: unknown): string | null {
       // #5990: the brand-impersonation guard (ADR 0004) previously ran only on
       // the deprecated discovery path's local copy; run it here too so every
       // contributor-submitted surface URL -- the path that actually ships today
-      // (validate-surface.mjs / surface-add.mjs) -- is checked, not just
+      // (validate-surface.ts / surface-add.ts) -- is checked, not just
       // auto-discovered candidates.
       isBrandImpersonationUrl(url.toString())
     ) {
@@ -2394,7 +2394,7 @@ export function computeProvenanceElevations({
 // a maintainer should elevate next, i.e. provenance-strong live APIs whose subnet
 // is NOT already at the top trust tier (maintainer-reviewed / adapter-backed).
 // Deterministic (generated_at is the fixed build placeholder) so the committed
-// queue is drift-checked by validate.mjs. Pure — takes the already-loaded inputs.
+// queue is drift-checked by validate.ts. Pure — takes the already-loaded inputs.
 const TOP_TRUST_LEVELS = new Set(["maintainer-reviewed", "adapter-backed"]);
 export function buildProvenanceReviewQueue({
   candidates = [],
@@ -2670,7 +2670,7 @@ export function staleOperationalKinds({
 }
 
 // Chain-text formatting and sanitization helpers were extracted to
-// scripts/lib/formatting.mjs (#510 maintainability decomposition). Re-exported
+// scripts/lib/formatting.ts (#510 maintainability decomposition). Re-exported
 // here verbatim so every existing importer of scripts/lib.ts keeps its import
 // path unchanged — pure code-motion with byte-identical artifact output.
 export {
@@ -2683,9 +2683,9 @@ export {
   stripUrls,
   cleanDescription,
   deriveDescriptionFromNotes,
-} from "./lib/formatting.mjs";
+} from "./lib/formatting.ts";
 
-// README link selection + classification was extracted to scripts/lib/readme-links.mjs
+// README link selection + classification was extracted to scripts/lib/readme-links.ts
 // (#510 maintainability decomposition). Re-exported here verbatim so every existing
 // importer of scripts/lib.ts keeps its import path unchanged — pure code-motion
 // with byte-identical artifact output.
@@ -2695,7 +2695,7 @@ export {
   isLikelyExampleLink,
   selectReviewableReadmeLinks,
   isReviewableReadmeLink,
-} from "./lib/readme-links.mjs";
+} from "./lib/readme-links.ts";
 
 // Economics + endpoint artifact derivation were extracted to dedicated modules
 // under scripts/lib/ (#510 maintainability decomposition). They are re-exported
@@ -2704,7 +2704,7 @@ export {
 export {
   computeMinerReadiness,
   buildEconomicsArtifact,
-} from "./lib/economics-artifacts.mjs";
+} from "./lib/economics-artifacts.ts";
 export {
   buildRpcEndpointArtifact,
   buildEndpointResourceArtifact,

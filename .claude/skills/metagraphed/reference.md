@@ -27,7 +27,7 @@ to trust a surface. "community-submitted" ≠ verified truth until the gate/buil
 
 **The filename is the slugified name, not the netuid.** Correct: `registry/subnets/zeus.json`. Wrong:
 `registry/subnets/sn-18.json`. The `sn-<netuid>` form is only correct as a fallback for the rare subnet
-whose name doesn't produce a usable slug — see `scripts/subnet-new.mjs`, the only correct way to
+whose name doesn't produce a usable slug — see `scripts/subnet-new.ts`, the only correct way to
 scaffold a new subnet file (`npm run subnet:new -- --netuid <n> --name "<Real Name>" --write`). Never
 hand-name a new file, including during an ad-hoc enrichment pass (e.g. a taostats identity gap-fill) run
 interactively rather than through a committed script — always scaffold through `subnet:new`. `npm run
@@ -389,8 +389,8 @@ SDK` commit, so a hand-bump here is redundant at best and a conflicting version 
   instead of reaching for app infrastructure — that's the exact regression this package's extraction
   exists to prevent.
 - **`packages/contract` is a types-only npm workspace (#3067) holding the OpenAPI-derived contract
-  types** — `openapi-typescript`'s output (`scripts/generate-types.ts`/`validate-types.mjs`/
-  `validate-contract-drift.mjs` all write/check `packages/contract/index.d.ts` now, no longer
+  types** — `openapi-typescript`'s output (`scripts/generate-types.ts`/`validate-types.ts`/
+  `validate-contract-drift.ts` all write/check `packages/contract/index.d.ts` now, no longer
   `generated/metagraphed-api.d.ts`, which no longer exists). `packages/client` depends on it as a
   real `devDependency` (`"metagraphed-contract": "*"`) and imports `type { components, paths } from
 "metagraphed-contract"` directly — no more copying it into `packages/client/src` first (unlike
@@ -430,7 +430,7 @@ SDK` commit, so a hand-bump here is redundant at best and a conflicting version 
   worker-computed. Mirror an existing route end-to-end; the build's derived-artifact freshness gate
   fails if a committed `public/metagraph/*` is stale. It also trips gates the "new route" framing
   above doesn't cover, caught live 2026-07-18 shipping two routes with none of these:
-  `scripts/validate-api.mjs`'s own `checks` array needs a matching `[route, assertion]` entry (it
+  `scripts/validate-api.ts`'s own `checks` array needs a matching `[route, assertion]` entry (it
   asserts `checks.length === API_ROUTES.length`, a **live RPC call** against real finney, not a
   stub); codecov/patch (99%, branch-counted) needs GraphQL/MCP test coverage in the _centralized_
   `tests/graphql.test.mjs`/`tests/mcp-server.test.mjs` files specifically, not just a per-feature
@@ -456,7 +456,7 @@ api-reference/**` wasn't regenerated — run `node scripts/generate-openapi-docs
   build, but their committed copies on `main` reflect the last real deploy/publish — not a local build —
   for reasons unrelated to your change: `r2-manifest.json` is publish infrastructure read from its
   committed path by `scripts/kv-publish-pointer.ts` / `scripts/cloudflare-verify.mjs` /
-  `scripts/sync-summary.mjs` during the actual publish, and its `*_artifact_size_bytes` totals are
+  `scripts/sync-summary.ts` during the actual publish, and its `*_artifact_size_bytes` totals are
   inherently non-deterministic build-to-build; `schemas/index.json` is a network-capture cache the build
   "reconciles in place". Both are explicitly excluded from the derived-artifact freshness gate in
   `.github/workflows/validate.yml` (see the comment above that step) — CI won't catch this, but the

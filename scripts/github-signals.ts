@@ -1,15 +1,15 @@
 // Per-subnet GitHub language + last-push dev-activity signal (#6639, #5968
 // survey — Bittensor.ai finding). Reuses the same api.github.com REST calls
-// verify-candidates.mjs already makes for source-repo verification (owner/repo
+// verify-candidates.ts already makes for source-repo verification (owner/repo
 // parsing, GITHUB_TOKEN auth), but captures developer-signal metadata
 // (language breakdown, last push) instead of existence/redirect verification.
 //
-// A SEPARATE periodic pass from verify-candidates.mjs on purpose: that script
+// A SEPARATE periodic pass from verify-candidates.ts on purpose: that script
 // only ever sees NEWLY SUBMITTED candidates (registry/candidates/), so bolting
 // onto its cadence would mean already-promoted source-repo surfaces (the vast
 // majority of subnets) never get this data, and it would never refresh. This
 // module instead resolves the FINAL merged source_repo per subnet (mirroring
-// build-artifacts.mjs's mergeSubnet / validate.mjs's buildExpectedGeneratedSubnet
+// build-artifacts.mjs's mergeSubnet / validate.ts's buildExpectedGeneratedSubnet
 // exactly: curated overlay wins, else the on-chain chain_identity.github_repo
 // backfill), so every subnet with a resolved source-repo gets covered --
 // matching the registry-build cadence, not the candidate-discovery one.
@@ -44,7 +44,7 @@ interface GithubRepoRef {
 }
 
 // Parses a github.com repo URL into {owner, repo}, or null for anything else
-// (a non-GitHub source-repo, or a malformed URL). Mirrors verify-candidates.mjs's
+// (a non-GitHub source-repo, or a malformed URL). Mirrors verify-candidates.ts's
 // own parseGithubRepo -- kept as a separate copy rather than a shared import
 // since that module's version is tied to its own candidate-verification
 // call shape, not exported for reuse.
@@ -86,7 +86,7 @@ export function githubHeaders(): Record<string, string> {
   };
 }
 
-interface GithubSignalEntry {
+export interface GithubSignalEntry {
   languages: Row | null;
   last_push_at: string | null;
 }
@@ -148,7 +148,7 @@ export function githubSignalsForSubnet(
 
 // Resolves every subnet's FINAL source_repo the same way mergeSubnet does,
 // deduped to one entry per unique GitHub repo (several subnets can share a
-// monorepo source_repo) -- mirrors the exact dedup verify-candidates.mjs's
+// monorepo source_repo) -- mirrors the exact dedup verify-candidates.ts's
 // own mapLimit concurrency needs, just keyed on repo identity instead of
 // candidate id.
 async function resolveTrackedRepos(): Promise<GithubRepoRef[]> {
@@ -265,7 +265,7 @@ async function main(): Promise<void> {
 }
 
 // Only run when invoked directly (`node scripts/github-signals.ts`), not
-// when imported for its exported helpers (build-artifacts.mjs, validate.mjs,
+// when imported for its exported helpers (build-artifacts.mjs, validate.ts,
 // tests).
 if (import.meta.url === `file://${process.argv[1]}`) {
   await main();

@@ -4,10 +4,10 @@
 // data-refresh-node-entrypoint.sh, both of which clone this repo at
 // container runtime -- see those entrypoints' own headers), plus a couple of
 // Cloudflare-publish-side build steps that fit the same "short-lived batch
-// script" shape. Used by refresh-economics.ts, refresh-native-snapshot.mjs,
+// script" shape. Used by refresh-economics.ts, refresh-native-snapshot.ts,
 // backfill-registry-postgres.ts, discover-testnet-surfaces.ts,
-// export-parquet.ts, reconcile-neurons.ts, sync-registry-to-postgres.mjs,
-// and refresh-og-image.mjs so all eight report to the same consolidated
+// export-parquet.ts, reconcile-neurons.ts, sync-registry-to-postgres.ts,
+// and refresh-og-image.ts so all eight report to the same consolidated
 // `metagraphed` Sentry project with a consistent `component` tag --
 // matching scripts/observability.py's own Python-side convention for the
 // chain-fetch scripts.
