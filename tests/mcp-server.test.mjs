@@ -15809,8 +15809,75 @@ describe("MCP parity tools — provider + discovery bundle (artifact-backed)", (
   });
 
   test("list_rpc_endpoints rejects an unexpected argument", async () => {
-    const res = await callTool("list_rpc_endpoints", { netuid: 7 });
+    const res = await callTool("list_rpc_endpoints", { bogus: 1 });
     assert.equal(res.body.result.isError, true);
+  });
+
+  test("list_rpc_endpoints filters by kind/netuid/status and sorts by netuid", async () => {
+    const deps = makeDeps({
+      "/metagraph/rpc-endpoints.json": {
+        generated_at: "2026-01-01T00:00:00Z",
+        endpoints: [
+          {
+            netuid: 0,
+            kind: "subtensor-rpc",
+            status: "ok",
+            url: "https://rpc-a.example",
+          },
+          {
+            netuid: 0,
+            kind: "subtensor-wss",
+            status: "degraded",
+            url: "wss://rpc-b.example",
+          },
+        ],
+      },
+    });
+    const byKind = (
+      await callTool("list_rpc_endpoints", { kind: "subtensor-wss" }, { deps })
+    ).body.result.structuredContent;
+    assert.equal(byKind.returned, 1);
+    assert.equal(byKind.endpoints[0].url, "wss://rpc-b.example");
+
+    const byStatus = (
+      await callTool("list_rpc_endpoints", { status: "ok" }, { deps })
+    ).body.result.structuredContent;
+    assert.equal(byStatus.returned, 1);
+    assert.equal(byStatus.endpoints[0].url, "https://rpc-a.example");
+
+    const sorted = (
+      await callTool(
+        "list_rpc_endpoints",
+        { sort: "kind", order: "desc" },
+        { deps },
+      )
+    ).body.result.structuredContent;
+    assert.deepEqual(
+      sorted.endpoints.map((e) => e.kind),
+      ["subtensor-wss", "subtensor-rpc"],
+    );
+  });
+
+  test("list_rpc_endpoints rejects an unknown kind/sort value", async () => {
+    const deps = makeDeps({
+      "/metagraph/rpc-endpoints.json": {
+        generated_at: "2026-01-01T00:00:00Z",
+        endpoints: [],
+      },
+    });
+    const badKind = await callTool(
+      "list_rpc_endpoints",
+      { kind: "not-a-kind" },
+      { deps },
+    );
+    assert.equal(badKind.body.result.isError, true);
+
+    const badSort = await callTool(
+      "list_rpc_endpoints",
+      { sort: "not-a-field" },
+      { deps },
+    );
+    assert.equal(badSort.body.result.isError, true);
   });
 
   test("list_source_snapshots returns filtered source rows", async () => {

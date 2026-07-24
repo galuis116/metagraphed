@@ -181,6 +181,12 @@ import {
   loadRpcPoolsList,
 } from "./rpc-pools-mcp.ts";
 import {
+  LIST_RPC_ENDPOINTS_INSTRUCTIONS,
+  LIST_RPC_ENDPOINTS_MCP_TOOL,
+  LIST_RPC_ENDPOINTS_OUTPUT_SCHEMA,
+  loadRpcEndpointsList,
+} from "./rpc-endpoints-mcp.ts";
+import {
   LIST_ENDPOINT_INCIDENTS_INSTRUCTIONS,
   LIST_ENDPOINT_INCIDENTS_MCP_TOOL,
   LIST_ENDPOINT_INCIDENTS_OUTPUT_SCHEMA,
@@ -425,7 +431,6 @@ import {
   loadSubnetReliability,
   loadSubnetTrajectory,
   mergeFreshness,
-  mergeRpcEndpoints,
   overlayArtifactEndpoints,
   overlayCatalogDetail,
   overlayCatalogIndex,
@@ -997,8 +1002,7 @@ export const MCP_INSTRUCTIONS =
   "unpromoted candidate surfaces still pending review, list_endpoints the " +
   "network-wide monitored endpoint-resource catalog, " +
   LIST_EVIDENCE_INSTRUCTIONS +
-  "list_rpc_endpoints the monitored " +
-  "Bittensor RPC endpoint catalog, " +
+  LIST_RPC_ENDPOINTS_INSTRUCTIONS +
   LIST_SOURCE_SNAPSHOTS_INSTRUCTIONS +
   "list_rpc_pools the load-balanced RPC pool " +
   "scores, " +
@@ -9732,30 +9736,9 @@ export const MCP_TOOLS = [
     },
   },
   {
-    name: "list_rpc_endpoints",
-    title: "List Bittensor RPC endpoints",
-    description:
-      "Fetch the catalog of monitored Bittensor base-layer RPC endpoints and " +
-      "their status (each endpoint's URL, network, and probe-derived " +
-      "health/latency). This is the full-catalog view; use get_best_rpc_endpoint " +
-      "instead to pick one live-healthy endpoint. Mirrors GET /api/v1/rpc/endpoints.",
-    inputSchema: {
-      type: "object",
-      properties: {},
-      additionalProperties: false,
-    },
-    async handler(_args, ctx) {
-      const staticData = await loadArtifactData(
-        ctx,
-        "/metagraph/rpc-endpoints.json",
-      );
-      // Live overlay (mirrors workers/api.mjs's rpc-endpoints raw-artifact
-      // route): the build-time snapshot bakes stale health/latency, replace
-      // it from the 15-minute cron RPC-pool KV snapshot.
-      const pool = ctx.readHealthKv
-        ? await ctx.readHealthKv(ctx.env, KV_HEALTH_RPC_POOL)
-        : null;
-      return pool ? mergeRpcEndpoints(staticData, pool) : staticData;
+    ...LIST_RPC_ENDPOINTS_MCP_TOOL,
+    async handler(args, ctx) {
+      return loadRpcEndpointsList(ctx, args);
     },
   },
   {
@@ -15382,16 +15365,7 @@ const TOOL_OUTPUT_SCHEMAS = {
   list_rpc_pools: LIST_RPC_POOLS_OUTPUT_SCHEMA,
   list_profile_completeness: LIST_PROFILE_COMPLETENESS_OUTPUT_SCHEMA,
   list_source_snapshots: LIST_SOURCE_SNAPSHOTS_OUTPUT_SCHEMA,
-  list_rpc_endpoints: {
-    type: "object",
-    additionalProperties: true,
-    required: [],
-    properties: {
-      endpoints: { type: "array", items: { type: "object" } },
-      generated_at: NULLABLE_STRING,
-      schema_version: { type: ["string", "integer", "null"] },
-    },
-  },
+  list_rpc_endpoints: LIST_RPC_ENDPOINTS_OUTPUT_SCHEMA,
   list_evidence: LIST_EVIDENCE_OUTPUT_SCHEMA,
   list_fixtures: {
     type: "object",
